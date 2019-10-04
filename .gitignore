@@ -1,0 +1,10 @@
+#Folders
+/**/bin/**
+/**/obj/**
+
+
+#Files
+*.exe
+*.dll
+*.pdb
+*.config
