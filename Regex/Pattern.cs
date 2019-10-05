@@ -17,7 +17,7 @@ namespace Regex
             position = 0;
             uncompiled_expression = pattern_string;
         }
-
+        
         public int Compile_expression()
         {
             for (int index = 0; index < uncompiled_expression.Length; index++)
@@ -32,7 +32,7 @@ namespace Regex
         {
             for (int input_index = 0; input_index < input_string.Length; input_index++)
             {
-                Check_next(input_string[input_index]);
+                Check(input_string[input_index]);
                 if (position == uncompiled_expression.Length)
                 {
                     position = 0;
@@ -42,38 +42,84 @@ namespace Regex
             position = 0;
             return 1;
         }
-        int Check_next(char character)
+        int Check(char character, int local_position=-1)
         {
-            
-            //Are we done? / matched?
-            if (position+2 > uncompiled_expression.Length)
+            if (local_position == -1)
             {
+                local_position = position;
+            }
+            //Are we done? / matched?
+            if (local_position + 1 > uncompiled_expression.Length)
+            {
+                return 1;
+            }
+            if (character == uncompiled_expression[local_position] ||
+                uncompiled_expression[local_position] == '.')
+            {
+                position++;
                 return 0;
             }
-            //Skip the char if optional
-            if (uncompiled_expression[position + 1] == '*' &&
-                character != uncompiled_expression[position])
+            //Repetition
+            if (uncompiled_expression[local_position] == '*')
             {
-                position += 2;
-            }
-            //Special chars/commands incoming
-            if (character == uncompiled_expression[position])
-            {                
-                position++;               
-            }            
-            //Repetition?
-            else if (uncompiled_expression[position] == '*')
-            {      
-                if (character == uncompiled_expression[position + 1])
+                if (Check(character, local_position+1)==0)
                 {
                     position += 2;
+                    return 0;
                 }
-                else if (character != uncompiled_expression[position-1])
+                else if (Check(character, local_position-1) == 0)
+                {
+                    return 0;
+                }
+                //All attempts failed, reseting machine
+                else
                 {
                     position = 0;
+                    return 1;
                 }
             }
-            return 0;
+            if (uncompiled_expression[local_position] == '+')
+            {
+                if (Check(character, local_position + 1) == 0)
+                {
+                    position += 2;
+                    return 0;
+                }
+                else if (Check(character, local_position - 1) == 0)
+                {                    
+                    return 0;
+                }
+                //All attempts failed, reseting machine
+                else
+                {
+                    position = 0;
+                    return 1;
+                }
+            }
+            //Lookahead
+            if (local_position + 1 < uncompiled_expression.Length)
+            {
+                if (uncompiled_expression[local_position + 1] == '*')
+                {
+                    return Check(character, local_position + 1);
+                }
+                else {
+                    position = 0;
+                    return 1;
+                } 
+            }
+            return 1;
+        }
+        bool BelongsInCharClass(char character, char[] charclass)
+        {
+            for (int characterIndex=0; characterIndex < charclass.Length; characterIndex++)
+            {
+                if(character == charclass[characterIndex])
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }

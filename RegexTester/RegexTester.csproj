@@ -47,9 +47,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\Regex\Regex.csproj">
       <Project>{63e7500b-4a92-4ff7-a8b5-063981d38eeb}</Project>
       <Name>Regex</Name>

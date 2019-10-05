@@ -25,6 +25,7 @@ namespace RegexTester
                 Debug.Assert(pattern.Check_expression("abcdHellobcsdWorld") == 0);
                 Debug.Assert(pattern.Check_expression("10Hello5557jjkWorld") == 0);
 
+                //Ignore char
                 pattern = new Pattern("Hellg*o");
                 Debug.Assert(pattern.Check_expression("Hello") == 0);
                 Debug.Assert(pattern.Check_expression("Hello World") == 0);
@@ -32,6 +33,31 @@ namespace RegexTester
                 Debug.Assert(pattern.Check_expression("akalHello") == 0);
                 Debug.Assert(pattern.Check_expression("abcdHellobcsdWorld") == 0);
                 Debug.Assert(pattern.Check_expression("10Hello5557jjkWorld") == 0);
+
+                //Dot tests
+                pattern = new Pattern("Hel.o");
+                Debug.Assert(pattern.Check_expression("Hello") == 0);
+                Debug.Assert(pattern.Check_expression("Hello World") == 0);
+                Debug.Assert(pattern.Check_expression("ajaHello World") == 0);
+                Debug.Assert(pattern.Check_expression("akalHello") == 0);
+                Debug.Assert(pattern.Check_expression("abcdHellobcsdWorld") == 0);
+                Debug.Assert(pattern.Check_expression("10Hello5557jjkWorld") == 0);
+
+                //GET ALL TEST. Dot and star eww
+                pattern = new Pattern(".*");
+                Debug.Assert(pattern.Check_expression("Hello") == 0);
+                Debug.Assert(pattern.Check_expression("Hello World") == 0);
+                Debug.Assert(pattern.Check_expression("ajaHello World") == 0);
+                Debug.Assert(pattern.Check_expression("akalHello") == 0);
+                Debug.Assert(pattern.Check_expression("abcdHellobcsdWorld") == 0);
+                Debug.Assert(pattern.Check_expression("10Hello5557jjkWorld") == 0);
+                Debug.Assert(pattern.Check_expression("Heggo") == 0);
+                Debug.Assert(pattern.Check_expression("Heggo World") == 0);
+                Debug.Assert(pattern.Check_expression("HELLO WORLD") == 0);
+                Debug.Assert(pattern.Check_expression("ajaHeo World") == 0);
+                Debug.Assert(pattern.Check_expression("oll*eH") == 0);
+                Debug.Assert(pattern.Check_expression("abcdhellobcsdWorld") == 0);
+                Debug.Assert(pattern.Check_expression("10HELLO5557jjkWorld") == 0);
 
                 Console.WriteLine("Positive Pattern assertions: OK");
             }
@@ -47,6 +73,16 @@ namespace RegexTester
             try
             {
                 Pattern pattern = new Pattern("Hell*o");
+                Debug.Assert(pattern.Check_expression("Heggo") == 1);
+                Debug.Assert(pattern.Check_expression("Heggo World") == 1);
+                Debug.Assert(pattern.Check_expression("HELLO WORLD") == 1);
+                Debug.Assert(pattern.Check_expression("ajaHeo World") == 1);
+                Debug.Assert(pattern.Check_expression("oll*eH") == 1);
+                Debug.Assert(pattern.Check_expression("abcdhellobcsdWorld") == 1);
+                Debug.Assert(pattern.Check_expression("10HELLO5557jjkWorld") == 1);
+
+                // Dot tests
+                pattern = new Pattern("H.llo");
                 Debug.Assert(pattern.Check_expression("Heggo") == 1);
                 Debug.Assert(pattern.Check_expression("Heggo World") == 1);
                 Debug.Assert(pattern.Check_expression("HELLO WORLD") == 1);
