@@ -42,72 +42,67 @@ namespace Regex
             position = 0;
             return 1;
         }
-        int Check(char character, int local_position=-1)
+        int Check(char character, int offset=0)
         {
-            if (local_position == -1)
+            int local_position = position + offset;
+            if (uncompiled_expression.Length < local_position)
             {
-                local_position = position;
-            }
-            //Are we done? / matched?
-            if (local_position + 1 > uncompiled_expression.Length)
-            {
-                return 1;
+                return 0;
             }
             if (character == uncompiled_expression[local_position] ||
                 uncompiled_expression[local_position] == '.')
             {
+                if (uncompiled_expression.Length > local_position + 1)
+                {
+                    if (uncompiled_expression[local_position+1] == '|')
+                    {
+                        position += 3;
+                        return 0;
+                    }
+                }
+                
                 position++;
+
                 return 0;
             }
-            //Repetition
             if (uncompiled_expression[local_position] == '*')
             {
-                if (Check(character, local_position+1)==0)
-                {
-                    position += 2;
-                    return 0;
-                }
-                else if (Check(character, local_position-1) == 0)
+                if (Check(character, -1) == 0)
                 {
                     return 0;
                 }
-                //All attempts failed, reseting machine
                 else
                 {
-                    position = 0;
-                    return 1;
-                }
-            }
-            if (uncompiled_expression[local_position] == '+')
-            {
-                if (Check(character, local_position + 1) == 0)
-                {
-                    position += 2;
+                    position++;
                     return 0;
                 }
-                else if (Check(character, local_position - 1) == 0)
-                {                    
+            }
+            if (uncompiled_expression.Length < local_position+1)
+            {
+                position = 0;
+                return 1;
+            }
+            if (uncompiled_expression[local_position + 1] == '*')
+            {
+                position++;
+                Check(character);
+                return 0;
+            }
+            if (uncompiled_expression.Length < local_position + 2)
+            {
+                position = 0;
+                return 1;
+            }
+            if (uncompiled_expression[local_position + 1] == '|')
+            {
+                if (Check(character, 2) == 0)
+                {
+                    position += 2; 
                     return 0;
                 }
-                //All attempts failed, reseting machine
-                else
-                {
-                    position = 0;
-                    return 1;
-                }
+                else return 1;
             }
-            //Lookahead
-            if (local_position + 1 < uncompiled_expression.Length)
-            {
-                if (uncompiled_expression[local_position + 1] == '*')
-                {
-                    return Check(character, local_position + 1);
-                }
-                else {
-                    position = 0;
-                    return 1;
-                } 
-            }
+            position = 0;
             return 1;
         }
         bool BelongsInCharClass(char character, char[] charclass)

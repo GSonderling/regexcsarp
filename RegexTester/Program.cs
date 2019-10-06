@@ -43,6 +43,16 @@ namespace RegexTester
                 Debug.Assert(pattern.Check_expression("abcdHellobcsdWorld") == 0);
                 Debug.Assert(pattern.Check_expression("10Hello5557jjkWorld") == 0);
 
+                //Alternative tests
+                pattern = new Pattern("abc|d");
+                Debug.Assert(pattern.Check_expression("abc") == 0);
+                Debug.Assert(pattern.Check_expression("abd") == 0);
+                pattern = new Pattern("..c|d");
+                Debug.Assert(pattern.Check_expression("abc") == 0);
+                Debug.Assert(pattern.Check_expression("abd") == 0);
+                Debug.Assert(pattern.Check_expression("sxd") == 0);
+                Debug.Assert(pattern.Check_expression("sxc") == 0);
+
                 //GET ALL TEST. Dot and star eww
                 pattern = new Pattern(".*");
                 Debug.Assert(pattern.Check_expression("Hello") == 0);
@@ -58,6 +68,7 @@ namespace RegexTester
                 Debug.Assert(pattern.Check_expression("oll*eH") == 0);
                 Debug.Assert(pattern.Check_expression("abcdhellobcsdWorld") == 0);
                 Debug.Assert(pattern.Check_expression("10HELLO5557jjkWorld") == 0);
+                Debug.Assert(pattern.Check_expression("abcde fghida46575jklmn     opqrstuv fd558456xyz") == 0);
 
                 Console.WriteLine("Positive Pattern assertions: OK");
             }
