@@ -5,7 +5,9 @@ VisualStudioVersion = 16.0.29102.190
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RegexTester", "RegexTester\RegexTester.csproj", "{1403DD43-19DB-4E48-869C-41741AE1A2B2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Regex", "Regex\Regex.csproj", "{63E7500B-4A92-4FF7-A8B5-063981D38EEB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Regex", "Regex\Regex.csproj", "{63E7500B-4A92-4FF7-A8B5-063981D38EEB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "grapefruit", "grapefruit\grapefruit.csproj", "{5ABAA2F0-BE0C-482F-B1BC-868BEB09D43D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{63E7500B-4A92-4FF7-A8B5-063981D38EEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{63E7500B-4A92-4FF7-A8B5-063981D38EEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{63E7500B-4A92-4FF7-A8B5-063981D38EEB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5ABAA2F0-BE0C-482F-B1BC-868BEB09D43D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5ABAA2F0-BE0C-482F-B1BC-868BEB09D43D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5ABAA2F0-BE0C-482F-B1BC-868BEB09D43D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5ABAA2F0-BE0C-482F-B1BC-868BEB09D43D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
