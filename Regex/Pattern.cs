@@ -44,7 +44,7 @@ namespace Regex
         int Check(char character, int offset=0)
         {
             int local_position = position + offset;
-            if (uncompiled_expression.Length < local_position)
+            if (uncompiled_expression.Length <= local_position)
             {
                 return 0;
             }
@@ -76,7 +76,7 @@ namespace Regex
                     return 0;
                 }
             }
-            if (uncompiled_expression.Length < local_position+1)
+            if (uncompiled_expression.Length <= local_position+1)
             {
                 position = 0;
                 return 1;

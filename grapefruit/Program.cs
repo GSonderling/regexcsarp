@@ -8,8 +8,7 @@ namespace grapefruit
     {
         static void Main(string[] args)
         {
-            Pattern pattern = new Pattern("");
-            CheckFile(args[0],pattern);
+            CheckFile(args[1], new Pattern(args[0]));
         }
 
         static int CheckFile(string path, Pattern pattern,int outputMode = 0)
