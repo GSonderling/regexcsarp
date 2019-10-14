@@ -14,6 +14,7 @@ namespace RegexTester
             try
             {
                 Pattern pattern = new Pattern("Hel*o");
+                pattern.Compile_expression();
                 Debug.Assert(pattern.Check_expression("Hello") == 0);
                 Debug.Assert(pattern.Check_expression("Hello World") == 0);
                 Debug.Assert(pattern.Check_expression("ajaHello World") == 0);
@@ -23,6 +24,7 @@ namespace RegexTester
 
                 //Ignore char
                 pattern = new Pattern("Hellg*o");
+                pattern.Compile_expression();
                 Debug.Assert(pattern.Check_expression("Hello") == 0);
                 Debug.Assert(pattern.Check_expression("Hello World") == 0);
                 Debug.Assert(pattern.Check_expression("ajaHello World") == 0);
