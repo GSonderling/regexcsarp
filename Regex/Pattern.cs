@@ -47,7 +47,7 @@ namespace Regex
             {
                 if (compiled)
                 {
-                    CheckCompiled(input_string[input_index]);
+                    int test = CheckCompiled(input_string[input_index]);
                     if (position == compiled_expression.Length)
                     {
                         position = 0;
@@ -135,63 +135,136 @@ namespace Regex
         int CheckCompiled(char character, int offset = 0)
         {
             int local_position = position + offset;
-            //if (compiled_expression.Length <= local_position)
-            //{
-            //    return 0;
-            //}
-            if (character == compiled_expression[local_position] ||
-                compiled_expression[local_position] == '.')
-            {
-                if (compiled_expression.Length > local_position + 1)
-                {
-                    if (compiled_expression[local_position + 1] == '|')
+
+            if (character == compiled_expression[local_position])
+            { 
+                if (CheckToken(compiled_expression, local_position + 1) &&
+                    GetToken(compiled_expression, local_position + 1) == "<OR>")
+                {                    
+                    local_position += "<OR>".Length;
+                    if(!CheckToken(compiled_expression, local_position + 1))
                     {
-                        position += 3;
-                        return 0;
+                        local_position += 2;
                     }
-                }
-
-                position = local_position+1;
-
-                return 0;
-            }
-            if (compiled_expression.Length <= local_position + tokens['*'].Length)
-            {
-                position = 0;
-                return 1;
-            }
-            if (compiled_expression.Substring(local_position, tokens['*'].Length) == tokens['*'])
-            {
-                if (CheckCompiled(character, -1) == 0)
-                {
-                    return 0;
+                    position = local_position;
                 }
                 else
                 {
-                    return CheckCompiled(character, tokens['*'].Length);
+                    position = local_position + 1;
                 }
+                return 0;
             }
-            //if (compiled_expression.Substring(local_position+1, tokens['*'].Length) == tokens['*'])
-            //{
-            //    return CheckCompiled(character, tokens['*'].Length + 1);
-            //}
-            
-            if (compiled_expression.Length < local_position + 2)
+            if (compiled_expression[local_position] == '<' && CheckToken(compiled_expression, local_position))
             {
-                position = 0;
-                return 1;
-            }
-            if (compiled_expression[local_position + 1] == '|')
-            {
-                if (CheckCompiled(character, 2) == 0)
+                if (GetToken(compiled_expression, local_position) == "<DOT>")
                 {
-                    position += 2;
+                    position += "<DOT>".Length;
+
                     return 0;
                 }
-                else return 1;
+
+                if (GetToken(compiled_expression, local_position) == "<KLEENE_STAR>")
+                {
+                    //Lookback
+                    if(CheckCompiled(character, -1) == 0)
+                    {
+                        //Position unchanged
+                        return 0;
+                    }
+                    //Lookforward
+                    else if(compiled_expression.Length > (local_position + "<KLEENE_STAR>".Length))
+                    {
+                        return CheckCompiled(character, "<KLEENE_STAR>".Length+offset);                        
+                    }
+                    //Nothing beyond to compare with
+                    else
+                    {
+                        return 1;
+                    }
+                    //Lookforward
+                    //else if (compiled_expression.Length > (position + "<KLEENE_STAR>".Length))
+                    //{
+                    //    if (CheckCompiled(character, "<KLEENE_STAR>".Length) == 0)
+                    //    {
+                    //        //Position Changed already
+                    //        return 0;
+                    //    }
+                    //}
+                    
+                }
+                if (GetToken(compiled_expression, local_position) == "<OR>")
+                {
+                    //Lookback
+                    if (CheckCompiled(character, -1) == 0)
+                    {
+                        //Position unchanged
+                        return 0;
+                    }
+                    //Lookforward
+                    else if (compiled_expression.Length > (local_position + "<OR>".Length))
+                    {
+                        return CheckCompiled(character, "<OR>".Length + offset);
+                    }
+                    //Nothing beyond to compare with
+                    else
+                    {
+                        return 1;
+                    }
+                }
             }
-            //position = 0;
+            else if (compiled_expression[local_position + 1] == '<' && CheckToken(compiled_expression, local_position + 1))
+            {
+                return CheckCompiled(character, offset = 1);
+            }
+            else if (compiled_expression[local_position] == '>')
+            {
+                position = position;
+            }
+            if (position == compiled_expression.Length)
+            {
+                return 0;
+            }
             return 1;
+        }
+
+        bool CheckToken(string compiled_expression, int local_position)
+        {
+            bool token_valid = false;
+            for (int index = local_position; index<compiled_expression.Length; index++)
+            {
+                if(compiled_expression[index] == '>')
+                {
+                    token_valid = true;
+                    break;
+                }
+            }
+
+            return token_valid;
+        }
+        string GetToken(string compiled_expression, int local_position)
+        {
+            int cutoff = local_position;
+            string discovered_token;
+
+            for (int index = local_position; index < compiled_expression.Length; index++)
+            {
+                if (compiled_expression[index] == '>')
+                {
+                    cutoff = index;
+                    break;
+                }
+            }
+
+            if (cutoff == local_position)
+            {
+                discovered_token = "<ERROR>";
+            }
+            else
+            {
+                discovered_token = compiled_expression.Substring(local_position, (cutoff + 1) - local_position);
+            }
+
+            return discovered_token;
         }
         bool BelongsInCharClass(char character, char[] charclass)
         {
