@@ -8,9 +8,10 @@ namespace Regex
         string uncompiled_expression;
         string compiled_expression;       
         
-        int current_rep;
+        int token_position;
         int repetition_count;
         bool compiled;
+        int[] tokenPositions;
         Dictionary<char, string> tokens = new Dictionary<char, string> {
             {'*', "<KLEENE_STAR>"},
             {'|', "<OR>" },
@@ -21,22 +22,30 @@ namespace Regex
             compiled = false;
             repetition_count = 0;
             position = 0;
+            token_position = 0;
             uncompiled_expression = pattern_string;
         }
         
         public int Compile_expression()
         {
+            string tokenPositionsTemp = "";
             for (int index = 0; index < uncompiled_expression.Length; index++)
             {
                 if (tokens.ContainsKey(uncompiled_expression[index]))
                 {
                     compiled_expression += tokens[uncompiled_expression[index]];
+                    tokenPositionsTemp += index.ToString();
                 }
                 else
                 {
                     compiled_expression += uncompiled_expression[index];
                 }
                               
+            }
+            tokenPositions = new int[tokenPositionsTemp.Length];
+            for (int index = 0; index < tokenPositionsTemp.Length; index++)
+            {
+                tokenPositions[index] = (int) char.GetNumericValue(tokenPositionsTemp[index]);
             }
             compiled = true;
             return 0;
@@ -132,10 +141,10 @@ namespace Regex
             return 1;
         }
 
-        int CheckCompiled(char character, int offset = 0)
+        int CheckCompiled(char character, int offset = 0, int tokenOffset = 0)
         {
             int local_position = position + offset;
-
+            int localTokenPosition = token_position + tokenOffset;
             if (character == compiled_expression[local_position])
             { 
                 if (CheckToken(compiled_expression, local_position + 1) &&
@@ -154,12 +163,13 @@ namespace Regex
                 }
                 return 0;
             }
-            if (compiled_expression[local_position] == '<' && CheckToken(compiled_expression, local_position))
+            if (local_position == tokenPositions[localTokenPosition] && CheckToken(compiled_expression, local_position))
             {
+                //If we find Dot we move right by one in the token list and by exact length of <DOT> in compiled string
                 if (GetToken(compiled_expression, local_position) == "<DOT>")
                 {
                     position += "<DOT>".Length;
-
+                    token_position++;
                     return 0;
                 }
 
@@ -171,26 +181,16 @@ namespace Regex
                         //Position unchanged
                         return 0;
                     }
-                    //Lookforward
+                    //Lookforward, skip towards next token or literal
                     else if(compiled_expression.Length > (local_position + "<KLEENE_STAR>".Length))
                     {
-                        return CheckCompiled(character, "<KLEENE_STAR>".Length+offset);                        
+                        return CheckCompiled(character, "<KLEENE_STAR>".Length+offset, 1);                        
                     }
                     //Nothing beyond to compare with
                     else
                     {
                         return 1;
                     }
-                    //Lookforward
-                    //else if (compiled_expression.Length > (position + "<KLEENE_STAR>".Length))
-                    //{
-                    //    if (CheckCompiled(character, "<KLEENE_STAR>".Length) == 0)
-                    //    {
-                    //        //Position Changed already
-                    //        return 0;
-                    //    }
-                    //}
-                    
                 }
                 if (GetToken(compiled_expression, local_position) == "<OR>")
                 {
@@ -212,7 +212,7 @@ namespace Regex
                     }
                 }
             }
-            else if (compiled_expression[local_position + 1] == '<' && CheckToken(compiled_expression, local_position + 1))
+            else if (local_position + 1 == '<' && CheckToken(compiled_expression, local_position + 1))
             {
                 return CheckCompiled(character, offset = 1);
             }
