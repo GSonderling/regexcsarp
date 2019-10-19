@@ -1,0 +1,160 @@
+              byte\ %bB?s/%s..?\ (END):?pB\ %pB\\%..
+              byte\ %bB?s/%s..?\ (END):?pB\ %pB\\%..
+       -b, --byte-offset
+              Print   the   0-based  byte  offset  within  the  input  file  before  each  line  of  output.   If  -o
+              column, this also causes the line number and byte offset (if present) to be printed in a  minimum  size
+       -u, --unix-byte-offsets
+              Report  Unix-style  byte offsets.  This switch causes grep to report byte offsets as if the file were a
+              Output a zero byte (the ASCII NUL character) instead of the character  that  normally  follows  a  file
+              name.   For  example,  grep  -lZ outputs a zero byte after each file name instead of the usual newline.
+              If  the  first few bytes of a file indicate that the file contains binary data, assume that the file is
+              binary data, grep may treat non-text bytes as line terminators; for example, the pattern  '.'  (period)
+              might  not  match  a  null byte, as the null byte might be treated as a line terminator.  Warning: grep
+              Treat  the input as a set of lines, each terminated by a zero byte (the ASCII NUL character) instead of
+              bn=32  SGR substring for byte offsets prefixing  any  content  line.   The  default  is  a  green  text
+              byte\ %bB?s/%s..?\ (END):?pB\ %pB\\%..
+              bytes; see SIZE format below
+              default to 1024-byte blocks for disk usage
+              byte\ %bB?s/%s..?\ (END):?pB\ %pB\\%..
+           -mone-byte-bool
+           -mwide-bitfields  -mno-wide-bitfields -m4byte-functions  -mno-4byte-functions  -mcallgraph-data
+           -mno-callgraph-data  -mslow-bytes  -mno-slow-bytes  -mno-lsim -mlittle-endian  -mbig-endian  -m210  -m340
+               If -Wformat is specified, do not warn about format strings that contain NUL bytes.
+           Warn whenever an object of larger than len bytes is defined.
+           Warn if the size of a function frame is larger than len bytes.  The computation done to determine the
+           Warn if the stack usage of a function might be larger than len bytes.  The computation done to determine
+           byte boundaries.
+           *   A number of bytes.
+           otherwise made in the function.  The second field is this fixed number of bytes.
+           Align the start of functions to the next power-of-two greater than n, skipping up to n bytes.  For
+           instance, -falign-functions=32 aligns functions to the next 32-byte boundary, but -falign-functions=24
+           aligns to the next 32-byte boundary only if this can be done by skipping 23 bytes or less.
+           Align all branch targets to a power-of-two boundary, skipping up to n bytes like -falign-functions.  This
+           Align loops to a power-of-two boundary, skipping up to n bytes like -falign-functions.  If the loops are
+           by jumping, skipping up to n bytes like -falign-functions.  In this case, no dummy operations need be
+           The first two invocations to GCC save a bytecode representation of GIMPLE into special ELF sections inside
+           foo.o and bar.o.  The final invocation reads the GIMPLE bytecode from foo.o and bar.o, merges the two
+           The above generates bytecode for foo.c and bar.c, merges them together into a single GIMPLE representation
+           file is larger than a regular object file because it contains GIMPLE bytecodes and the usual final code
+           bytecode.  Therefore, you can mix and match object files and libraries with GIMPLE bytecodes and final
+           There are some code generation flags preserved by GCC when generating bytecodes, as they need to be used
+           If object files containing GIMPLE bytecode are stored in a library archive, say libfoo.a, it is possible
+           object files with GIMPLE bytecode, use gcc-nm.  Those commands require that ar, ranlib and nm have been
+           The current implementation of LTO makes no attempt to generate bytecode that is portable between different
+           types of hosts.  The bytecode files are versioned and there is a strict version check, so bytecode files
+           This option enables the extraction of object files with GIMPLE bytecode out of library archives. This
+           functions with buffers larger than 8 bytes.  The guards are initialized when a function is entered and
+               limit too much.  The default value is 256 bytes.
+               RLIMIT_AS are not exceeded, but with a lower bound of 4096 (four megabytes) and an upper bound of
+               131072 (128 megabytes).  If GCC is not able to calculate RAM on a particular platform, the lower bound
+               The size of cache line in L1 cache, in bytes.
+               The size of L1 cache, in kilobytes.
+               The size of L2 cache, in kilobytes.
+               bytes after which variables are saved with the logging functions as opposed to save/restore code
+           eight bytes in the range "sp+0...sp+7" can be used by leaf functions without stack allocation.  Values
+           Passed down to the assembler to enable the swap byte ordering extension instruction.  Also sets the
+           outside of the 64-megabyte addressing range of the offset-based version of subroutine call instruction.
+           structures are accessed a byte at a time.
+               "Enhanced" devices with 3-byte PC, i.e. with more than 128@tie{}KiB of program memory.  mcu@tie{}=
+           Assume "int" to be 8-bit integer.  This affects the sizes of all types: a "char" is 1 byte, an "int" is 1
+           byte, a "long" is 2 bytes, and "long long" is 4 bytes.  Please note that this option does not conform to
+           Treat the stack pointer register as an 8-bit register, i.e. assume the high byte of the stack pointer is
+       "EIND" and Devices with More Than 128 Ki Bytes of Flash
+       In order to facilitate indirect jump on devices with more than 128@tie{}Ki bytes of program memory space,
+                       /* Call function at byte address 0x4 */
+           128@tie{}KiB of program memory.  This also means that the program counter (PC) is 3@tie{}bytes wide.
+           The program counter (PC) is 2@tie{}bytes wide. This is the case for devices with up to 128@tie{}KiB of
+           Warn when the stack frame of a function exceeds n bytes.
+       -mone-byte-bool
+           Warning: The -mone-byte-bool switch causes GCC to generate code that is not binary compatible with code
+           -msmall-data is used, objects 8 bytes long or smaller are placed in a small data area (the ".sdata" and
+           Try to align labels to an 8-byte boundary by inserting NOPs into the previous packet.  This option only
+           H8S is to align longs and floats on 4-byte boundaries.  -malign-300 causes them to be aligned on 2-byte
+           branch type being used.  The limits for normal calls are 7,600,000 and 240,000 bytes, respectively for the
+           PA 2.0 and PA 1.X architectures.  Sibcalls are always limited at 240,000 bytes.
+           Put global and static objects less than or equal to num bytes into the small data or BSS sections instead
+           Align all loops to a 32-byte boundary.
+           Do not enforce a 32-byte alignment for loops.  This is the default.
+       -m4byte-functions
+       -mno-4byte-functions
+           Force all functions to be aligned to a 4-byte boundary.
+           Prefer word access when reading byte quantities.
+           Variables of size n bytes or smaller are placed in the ".based" section by default.  Based variables use
+           the $tp register as a base register, and there is a 128-byte limit to the ".based" section.
+       -ms Causes all variables to default to the ".tiny" section.  Note that there is a 65536-byte limit to this
+           Variables that are n bytes or smaller are allocated to the ".tiny" section.  These variables use the $gp
+           base register.  The default for this option is 4, but note that there's a 65536-byte limit to the ".tiny"
+           Use reorder instructions (swap and byte reversed load/store).
+           bytes.  GCC can then generate more efficient accesses to the data; see -mgpopt for details.
+           no bigger than num bytes, you must make sure that Var is placed in a small data section.  If Var is
+           but requires the caller and callee to be in the same 256 megabyte segment.
+           controls GCC's implementation of this workaround.  It assumes that aborted accesses to any byte in the
+           is 8-byte aligned.  When this option is enabled, GCC aligns pairs of instructions that it thinks should
+           Put global and static objects less than or equal to num bytes into the small data or BSS sections instead
+           byte (char) manipulation, since the DSP AE does not provide hardware support for byte load/stores.
+           when compiling code that performs byte-level memory operations on the MAC AE type.  The MAC AE has no
+           hardware support for byte-level memory operations, so all byte load/stores must be synthesized from word
+           the code to avoid byte operations, or to target an AE type that has the necessary hardware support.  This
+           to a 4-byte boundary and has a size of 4 bytes.  By using -mno-bit-align, the structure is aligned to a
+           1-byte boundary and is 1 byte in size.
+           4-byte locations listed in the ".fixup" section, a table of 32-bit addresses generated by this option.
+           -mrelocatable code aligns the stack to an 8-byte boundary.
+           Return structures smaller than 8 bytes in registers (as specified by the SVR4 ABI).
+           means that the stack is aligned to an 8-byte boundary, a function "__eabi" is called from "main" to set up
+           data areas.  Selecting -mno-eabi means that the stack is aligned to a 16-byte boundary, no EABI
+           Inline all block moves (such as calls to "memcpy" or structure copies) less than or equal to num bytes.
+           The minimum value for num is 32 bytes on 32-bit targets and 64 bytes on 64-bit targets.  The default value
+           On embedded PowerPC systems, put global and static items less than or equal to num bytes into the small
+           required.  This is required for calls farther than 32 megabytes (33,554,432 bytes) from the current
+           Specifies the maximum size in bytes of global and static variables which can be placed into the small data
+           Specifies the maximum size, in bytes, of a constant that can be used as an operand in a RX instruction.
+           Although the RX instruction set does allow constants of up to 4 bytes in length to be used in
+           byte register save area.
+           fields of the 96/160 byte register save area only for their default purpose; unused fields still take up
+           that trigger a trap if the stack size is stack-guard bytes above the stack-size (remember that the stack
+           the compilation unit.  The funtion label is prepended with the given number of two-byte NOP instructions
+           (pre-halfwords, maximum 1000000).  After the label, 2 * post-halfwords bytes are appended, using the
+           This option is deprecated.  It pads structures to multiple of 4 bytes, which is incompatible with the SH
+               This parameter specifies the offset in bytes of the variable in the thread control block structure
+           Assume that doubles have 8-byte alignment.  This is the default.
+           With -munaligned-doubles, GCC assumes that doubles have 8-byte alignment only if they are contained in
+           another type, or if they have an absolute address.  Otherwise, it assumes they have 4-byte alignment.
+           With -mfaster-structs, the compiler assumes that structures should have 8-byte alignment.  This enables
+           Put static or global variables whose size is n bytes or less into the tiny data area that register "ep"
+           points to.  The tiny data area can hold up to 256 bytes in total (128 bytes for byte references).
+           Put static or global variables whose size is n bytes or less into the small data area that register "gp"
+           points to.  The small data area can hold up to 64 kilobytes.
+           Put static or global variables whose size is n bytes or less into the first 32 kilobytes of memory.
+           *   Large structures and unions (more than 8 bytes in size) are passed by value.
+           *   The -m8byte-align command-line option is supported.
+           *   Large structures and unions (more than 8 bytes in size) are passed by reference.
+           *   The -m8byte-align command-line option is not supported.
+       -m8byte-align
+       -mno-8byte-align
+           Enables support for "double" and "long long" types to be aligned on 8-byte boundaries.  The default is to
+           restrict the alignment of all objects to at most 4-bytes.  When -m8byte-align is in effect the C
+           Modern architectures (Pentium and newer) prefer "long double" to be aligned to an 8- or 16-byte boundary.
+           aligns "long double" to a 16-byte boundary by padding the "long double" with an additional 32-bit zero.
+           is aligned on 16-byte boundary.
+           Return 8-byte vectors in memory instead of MMX registers.  This is the default on Solaris@tie{}8 and 9 and
+           4-byte stack alignment with modern codes that keep 16-byte stack alignment for SSE compatibility.  See
+           Attempt to keep the stack boundary aligned to a 2 raised to num byte boundary.  If
+           -mpreferred-stack-boundary is not specified, the default is 4 (16 bytes or 128 bits).
+           -mpreferred-stack-boundary=3 can be used to keep the stack boundary aligned to 8 byte boundary.  Since
+           x86-64 ABI require 16 byte stack alignment, this is ABI incompatible and intended to be used in controlled
+           compiled with 16 byte stack alignment (such as functions from a standard library) are called with
+           addition, variable arguments are handled incorrectly for 16 byte aligned objects (including x87 long
+           Assume the incoming stack is aligned to a 2 raised to num byte boundary.  If -mincoming-stack-boundary is
+           On Pentium and Pentium Pro, "double" and "long double" values should be aligned to an 8-byte boundary (see
+           Extension (SSE) data type "__m128" may not work properly if it is not 16-byte aligned.
+           4-byte boundary.  This enables more inlining and increases code size, but may improve performance of code
+           byte_loop
+           byte size with which inline algorithm alg is allowed.  For the last triplet, the max_size must be "-1".
+           The max_size of the triplets in the list must be specified in increasing order.  The minimal byte size for
+           Split 32-byte AVX unaligned load and store.
+           128-byte area beyond the location of the stack pointer that is not modified by signal or interrupt
+           Allocate to an "enum" type only as many bytes as it needs for the declared range of possible values.
+           that might be a 32-bit load instruction, even though that accesses bytes that do not contain any portion
+           character boundaries in a string; this is needed for some multibyte encodings that contain quote and
+           are parsed in C and C++.  When the compiler is configured to allow multibyte characters, the following
+           defined by the default locale to recognize and translate multibyte characters.
