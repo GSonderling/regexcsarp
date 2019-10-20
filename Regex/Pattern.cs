@@ -1,36 +1,35 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 namespace Regex
 {
     public class Pattern
     {
         int position;
-        string uncompiled_expression;
-        string compiled_expression;       
+        string uncompiledExpression;
+        string compiledExpression;       
         
         int tokenPosition;
-        int repetition_count;
         int unresolvedPatternMismatch;
         bool compiled;
         int[] tokenPositions;
+
         Dictionary<char, string> tokens = new Dictionary<char, string> {
             {'*', "<KLEENE_STAR>"},
             {'|', "<OR>" },
             {'.', "<DOT>"}
         };
-        public Pattern(string pattern_string)
+
+        public Pattern(string patternString)
         {
             compiled = false;
-            repetition_count = 0;
             position = 0;
             tokenPosition = 0;
-            uncompiled_expression = pattern_string;
+            uncompiledExpression = patternString;
             unresolvedPatternMismatch = 0;
         }
         
         public int Compile_expression()
         {
-            int[] tokenPositionsTemp = new int[uncompiled_expression.Length];
+            int[] tokenPositionsTemp = new int[uncompiledExpression.Length];
             int tokenPositionsIterator = 0;
 
             //Temporary token positions are initialized to impossible values
@@ -39,19 +38,19 @@ namespace Regex
                 tokenPositionsTemp[index] = -10;
             }
 
-            for (int index = 0; index < uncompiled_expression.Length; index++)
+            for (int index = 0; index < uncompiledExpression.Length; index++)
             {
-                if (tokens.ContainsKey(uncompiled_expression[index]))
+                if (tokens.ContainsKey(uncompiledExpression[index]))
                 {
-                    compiled_expression += tokens[uncompiled_expression[index]];
+                    compiledExpression += tokens[uncompiledExpression[index]];
 
-                    tokenPositionsTemp[tokenPositionsIterator] = compiled_expression.Length - tokens[uncompiled_expression[index]].Length;
+                    tokenPositionsTemp[tokenPositionsIterator] = compiledExpression.Length - tokens[uncompiledExpression[index]].Length;
 
                     tokenPositionsIterator++;
                 }
                 else
                 {
-                    compiled_expression += uncompiled_expression[index];
+                    compiledExpression += uncompiledExpression[index];
                 }
                               
             }
@@ -67,15 +66,15 @@ namespace Regex
             
             return 0;
         }
-        public int Check_expression(string input_string)
+        public int Check_expression(string inputString)
         {
             
-            for (int input_index = 0; input_index < input_string.Length; input_index++)
+            for (int inputIndex = 0; inputIndex < inputString.Length; inputIndex++)
             {
                 if (compiled)
                 {
-                    unresolvedPatternMismatch = CheckCompiled(input_string[input_index]);
-                    if (position == compiled_expression.Length)
+                    unresolvedPatternMismatch = CheckCompiled(inputString[inputIndex]);
+                    if (position == compiledExpression.Length)
                     {
                         position = 0;
                         tokenPosition = 0;
@@ -92,8 +91,8 @@ namespace Regex
                 }
                 else
                 {
-                    Check(input_string[input_index]);
-                    if (position == uncompiled_expression.Length)
+                    Check(inputString[inputIndex]);
+                    if (position == uncompiledExpression.Length)
                     {
                         position = 0;
                         return 0;
@@ -107,16 +106,16 @@ namespace Regex
         int Check(char character, int offset=0)
         {
             int local_position = position + offset;
-            if (uncompiled_expression.Length <= local_position)
+            if (uncompiledExpression.Length <= local_position)
             {
                 return 0;
             }
-            if (character == uncompiled_expression[local_position] ||
-                uncompiled_expression[local_position] == '.')
+            if (character == uncompiledExpression[local_position] ||
+                uncompiledExpression[local_position] == '.')
             {
-                if (uncompiled_expression.Length > local_position + 1)
+                if (uncompiledExpression.Length > local_position + 1)
                 {
-                    if (uncompiled_expression[local_position+1] == '|')
+                    if (uncompiledExpression[local_position+1] == '|')
                     {
                         position += 3;
                         return 0;
@@ -127,7 +126,7 @@ namespace Regex
 
                 return 0;
             }
-            if (uncompiled_expression[local_position] == '*')
+            if (uncompiledExpression[local_position] == '*')
             {
                 if (Check(character, -1) == 0)
                 {
@@ -139,23 +138,23 @@ namespace Regex
                     return 0;
                 }
             }
-            if (uncompiled_expression.Length <= local_position+1)
+            if (uncompiledExpression.Length <= local_position+1)
             {
                 position = 0;
                 return 1;
             }
-            if (uncompiled_expression[local_position + 1] == '*')
+            if (uncompiledExpression[local_position + 1] == '*')
             {
                 position++;
                 Check(character);
                 return 0;
             }
-            if (uncompiled_expression.Length < local_position + 2)
+            if (uncompiledExpression.Length < local_position + 2)
             {
                 position = 0;
                 return 1;
             }
-            if (uncompiled_expression[local_position + 1] == '|')
+            if (uncompiledExpression[local_position + 1] == '|')
             {
                 if (Check(character, 2) == 0)
                 {
@@ -174,13 +173,13 @@ namespace Regex
             int localTokenPosition = tokenPosition + tokenOffset;
             int characterMatch = 1;
 
-            if (character == compiled_expression[localPosition])
+            if (character == compiledExpression[localPosition])
             { 
-                if (CheckToken(compiled_expression, localPosition + 1) &&
-                    GetToken(compiled_expression, localPosition + 1) == "<OR>")
+                if (CheckToken(compiledExpression, localPosition + 1) &&
+                    GetToken(compiledExpression, localPosition + 1) == "<OR>")
                 {                    
                     localPosition += "<OR>".Length;
-                    if(!CheckToken(compiled_expression, localPosition + 1))
+                    if(!CheckToken(compiledExpression, localPosition + 1))
                     {
                         localPosition += 2;
                     }
@@ -193,17 +192,17 @@ namespace Regex
 
                 characterMatch = 0;
             }
-            else if (localPosition == tokenPositions[localTokenPosition] && CheckToken(compiled_expression, localPosition))
+            else if (localPosition == tokenPositions[localTokenPosition] && CheckToken(compiledExpression, localPosition))
             {
                 //If we find Dot we move right by one in the token list and by exact length of <DOT> in compiled string
-                if (GetToken(compiled_expression, localPosition) == "<DOT>")
+                if (GetToken(compiledExpression, localPosition) == "<DOT>")
                 {
                     position += "<DOT>".Length + offset;
                     tokenPosition += 1 + tokenOffset;
                     characterMatch = 0;
                 }
                 //Kleene star behavior
-                else if (GetToken(compiled_expression, localPosition) == "<KLEENE_STAR>")
+                else if (GetToken(compiledExpression, localPosition) == "<KLEENE_STAR>")
                 {
                     //Lookback for exact character macth
                     if (CheckCompiled(character, -1) == 0)
@@ -212,17 +211,17 @@ namespace Regex
                         characterMatch = 0;
                     }
                     //Lookback for token 
-                    else if (compiled_expression[localPosition - 1] == '>')
+                    else if (compiledExpression[localPosition - 1] == '>')
                     {
                         if (CheckCompiled(character, 
-                                offset = -(GetToken(compiled_expression, tokenPositions[localTokenPosition - 1])).Length,
+                                offset = -(GetToken(compiledExpression, tokenPositions[localTokenPosition - 1])).Length,
                                 tokenOffset = -1) == 0)
                         {
 
                             characterMatch = 0;
                         }
                     }
-                    else if(compiled_expression.Length > (localPosition + "<KLEENE_STAR>".Length))
+                    else if(compiledExpression.Length > (localPosition + "<KLEENE_STAR>".Length))
                     {
                         characterMatch = CheckCompiled(character, "<KLEENE_STAR>".Length+offset, 1);                        
                     }
@@ -232,7 +231,7 @@ namespace Regex
                         characterMatch = 1;
                     }
                 }
-                else if (GetToken(compiled_expression, localPosition) == "<OR>")
+                else if (GetToken(compiledExpression, localPosition) == "<OR>")
                 {
                     //Lookback
                     if (CheckCompiled(character, -1) == 0)
@@ -241,7 +240,7 @@ namespace Regex
                         characterMatch = 0;
                     }
                     //Lookforward
-                    else if (compiled_expression.Length > (localPosition + "<OR>".Length))
+                    else if (compiledExpression.Length > (localPosition + "<OR>".Length))
                     {
                         characterMatch = CheckCompiled(character, "<OR>".Length + offset);
                     }
@@ -253,11 +252,11 @@ namespace Regex
                 }
             }
             //Look forward for token
-            else if (localPosition + 1 == tokenPositions[localTokenPosition] && CheckToken(compiled_expression, localPosition + 1))
+            else if (localPosition + 1 == tokenPositions[localTokenPosition] && CheckToken(compiledExpression, localPosition + 1))
             {
                 characterMatch = CheckCompiled(character, offset = 1);
             }
-            if (position == compiled_expression.Length)
+            if (position == compiledExpression.Length)
             {
                 characterMatch = 0;
             }
@@ -265,44 +264,44 @@ namespace Regex
             return characterMatch;
         }
 
-        bool CheckToken(string compiled_expression, int local_position)
+        bool CheckToken(string compiledExpression, int localPosition)
         {
-            bool token_valid = false;
-            for (int index = local_position; index<compiled_expression.Length; index++)
+            bool tokenValid = false;
+            for (int index = localPosition; index < compiledExpression.Length; index++)
             {
-                if(compiled_expression[index] == '>')
+                if(compiledExpression[index] == '>')
                 {
-                    token_valid = true;
+                    tokenValid = true;
                     break;
                 }
             }
 
-            return token_valid;
+            return tokenValid;
         }
-        string GetToken(string compiled_expression, int local_position)
+        string GetToken(string compiledExpression, int localPosition)
         {
-            int cutoff = local_position;
-            string discovered_token;
+            int cutoff = localPosition;
+            string discoveredToken;
 
-            for (int index = local_position; index < compiled_expression.Length; index++)
+            for (int index = localPosition; index < compiledExpression.Length; index++)
             {
-                if (compiled_expression[index] == '>')
+                if (compiledExpression[index] == '>')
                 {
                     cutoff = index;
                     break;
                 }
             }
 
-            if (cutoff == local_position)
+            if (cutoff == localPosition)
             {
-                discovered_token = "<ERROR>";
+                discoveredToken = "<ERROR>";
             }
             else
             {
-                discovered_token = compiled_expression.Substring(local_position, (cutoff + 1) - local_position);
+                discoveredToken = compiledExpression.Substring(localPosition, (cutoff + 1) - localPosition);
             }
 
-            return discovered_token;
+            return discoveredToken;
         }
         bool BelongsInCharClass(char character, char[] charclass)
         {
