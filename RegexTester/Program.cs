@@ -14,6 +14,7 @@ namespace RegexTester
             try
             {
                 Pattern pattern = new Pattern("Hel*o");
+                pattern.Compile_expression();
                 Debug.Assert(pattern.Check_expression("Hello") == 0);
                 Debug.Assert(pattern.Check_expression("Hello World") == 0);
                 Debug.Assert(pattern.Check_expression("ajaHello World") == 0);
@@ -23,6 +24,7 @@ namespace RegexTester
 
                 //Ignore char
                 pattern = new Pattern("Hellg*o");
+                pattern.Compile_expression();
                 Debug.Assert(pattern.Check_expression("Hello") == 0);
                 Debug.Assert(pattern.Check_expression("Hello World") == 0);
                 Debug.Assert(pattern.Check_expression("ajaHello World") == 0);
@@ -32,6 +34,7 @@ namespace RegexTester
 
                 //Dot tests
                 pattern = new Pattern("Hel.o");
+                pattern.Compile_expression();
                 Debug.Assert(pattern.Check_expression("Hello") == 0);
                 Debug.Assert(pattern.Check_expression("Hello World") == 0);
                 Debug.Assert(pattern.Check_expression("ajaHello World") == 0);
@@ -41,9 +44,11 @@ namespace RegexTester
 
                 //Alternative tests
                 pattern = new Pattern("abc|d");
+                pattern.Compile_expression();
                 Debug.Assert(pattern.Check_expression("abc") == 0);
                 Debug.Assert(pattern.Check_expression("abd") == 0);
                 pattern = new Pattern("..c|d");
+                pattern.Compile_expression();
                 Debug.Assert(pattern.Check_expression("abc") == 0);
                 Debug.Assert(pattern.Check_expression("abd") == 0);
                 Debug.Assert(pattern.Check_expression("sxd") == 0);
@@ -51,6 +56,7 @@ namespace RegexTester
 
                 //GET ALL TEST. Dot and star eww
                 pattern = new Pattern(".*");
+                pattern.Compile_expression();
                 Debug.Assert(pattern.Check_expression("Hello") == 0);
                 Debug.Assert(pattern.Check_expression("Hello World") == 0);
                 Debug.Assert(pattern.Check_expression("ajaHello World") == 0);
