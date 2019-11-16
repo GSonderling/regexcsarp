@@ -5,20 +5,22 @@ namespace Regex
     {
         int position;
         string uncompiledExpression;
-        string compiledExpression;       
-        
+        string compiledExpression;
+
         int tokenPosition;
         int unresolvedPatternMismatch;
         bool compiled;
         int[] tokenPositions;
 
-        Dictionary<char, string> tokens = new Dictionary<char, string> {
+        Dictionary<char, string> tokenChars = new Dictionary<char, string> {
             /*
              Dictionary of known tokens.
              */
-            {'*', "<KLEENE_STAR>"},
-            {'|', "<OR>" },
-            {'.', "<DOT>"}
+            { '*', "<KLEENE_STAR>"},
+            { '|', "<OR>" },
+            { '.', "<DOT>"},
+            { '(', "<START>"},
+            { ')', "<END>"}
         };
 
         public Pattern(string patternString)
@@ -29,8 +31,63 @@ namespace Regex
             uncompiledExpression = patternString;
             unresolvedPatternMismatch = 0;
         }
-        
-        public int Compile_expression()
+        public int CompileExpression()
+        {
+            //First find all subexpressions
+            int[] subexpressionsStartsTemp = new int[uncompiledExpression.Length];
+            int[] subexpressionsEndsTemp = new int[uncompiledExpression.Length];
+
+            int subexpressionStartIterator = 0;
+            int subexpressionEndIterator = 0;
+            string[] subexpressions;
+            //Temporary token positions are initialized to impossible values
+            for (int index = 0; index < subexpressionsEndsTemp.Length; index++)
+            {
+                subexpressionsStartsTemp[index] = -10;
+                subexpressionsEndsTemp[index] = -10;
+            }
+            //First find all bounds of subexpressions.
+            for (int index = 0; index < uncompiledExpression.Length; index++)
+            {
+
+                if (uncompiledExpression[index] == '(')
+                {
+                    subexpressionsStartsTemp[subexpressionStartIterator] = index;
+                    subexpressionStartIterator++;
+                }
+                else if (uncompiledExpression[index] == ')')
+                {
+                    subexpressionsEndsTemp[subexpressionEndIterator] = index;
+                    subexpressionEndIterator++;
+                }
+                //if (uncompiledExpression[index] == '\\')
+                //{
+                //    if (uncompiledExpression[index+1] == '(')
+                //    {
+                //        subexpressionsStartsTemp[subexpressionStartIterator] = index;
+                //        subexpressionStartIterator++;
+                //    }
+                //    else if (uncompiledExpression[index+1] == ')')
+                //    {
+                //        subexpressionsEndsTemp[subexpressionEndIterator] = index;
+                //        subexpressionEndIterator++;
+                //    }
+                //}
+
+            }
+
+            subexpressions = new string[subexpressionEndIterator];
+
+            for (int index = 0; index < subexpressionStartIterator; index++)
+            {
+                var test = (subexpressionsEndsTemp[index] - subexpressionsStartsTemp[index]);
+                subexpressions[index] = uncompiledExpression.Substring(subexpressionsStartsTemp[index] + 1, (subexpressionsEndsTemp[index] - subexpressionsStartsTemp[index] - 1));
+            }
+
+            return CompileSubexpression();
+        }
+
+        int CompileSubexpression()
         {
             int[] tokenPositionsTemp = new int[uncompiledExpression.Length];
             int tokenPositionsIterator = 0;
@@ -44,12 +101,12 @@ namespace Regex
             for (int index = 0; index < uncompiledExpression.Length; index++)
             {
                 //Check if there is a special character at location
-                if (tokens.ContainsKey(uncompiledExpression[index]))
+                if (tokenChars.ContainsKey(uncompiledExpression[index]))
                 {
                     //add token to compiled expression
-                    compiledExpression += tokens[uncompiledExpression[index]];
+                    compiledExpression += tokenChars[uncompiledExpression[index]];
                     //position of token in compiled string is stored in list for future use
-                    tokenPositionsTemp[tokenPositionsIterator] = compiledExpression.Length - tokens[uncompiledExpression[index]].Length;
+                    tokenPositionsTemp[tokenPositionsIterator] = compiledExpression.Length - tokenChars[uncompiledExpression[index]].Length;
                     //position list iterator is updated.
                     tokenPositionsIterator++;
                 }
@@ -58,7 +115,6 @@ namespace Regex
                     //if there is no valid token, we just use original char.
                     compiledExpression += uncompiledExpression[index];
                 }
-                              
             }
             //After the entire string is processed, we can save positions in final array.
             tokenPositions = new int[tokenPositionsIterator];
@@ -71,9 +127,10 @@ namespace Regex
             }
             //Set compiled flag to true. It's mostly pointless but might not be in the future.
             compiled = true;
-            
+
             return 0;
         }
+
         public int Check_expression(string inputString)
         {
             //We check every character in input string.
@@ -108,13 +165,13 @@ namespace Regex
                         position = 0;
                         return 0;
                     }
-                }                
+                }
             }
             //If we haven't found a match return 1 and reset counter. 
             position = 0;
             return 1;
         }
-        int Check(char character, int offset=0)
+        int Check(char character, int offset = 0)
         {
             int local_position = position + offset;
             if (uncompiledExpression.Length <= local_position)
@@ -126,13 +183,13 @@ namespace Regex
             {
                 if (uncompiledExpression.Length > local_position + 1)
                 {
-                    if (uncompiledExpression[local_position+1] == '|')
+                    if (uncompiledExpression[local_position + 1] == '|')
                     {
                         position += 3;
                         return 0;
                     }
                 }
-                
+
                 position++;
 
                 return 0;
@@ -149,7 +206,7 @@ namespace Regex
                     return 0;
                 }
             }
-            if (uncompiledExpression.Length <= local_position+1)
+            if (uncompiledExpression.Length <= local_position + 1)
             {
                 position = 0;
                 return 1;
@@ -169,7 +226,7 @@ namespace Regex
             {
                 if (Check(character, 2) == 0)
                 {
-                    position += 2; 
+                    position += 2;
                     return 0;
                 }
                 else return 1;
@@ -189,15 +246,15 @@ namespace Regex
             int characterMatch = 1;
             //If the character matches one present in compiled string...
             if (character == compiledExpression[localPosition])
-            { 
+            {
                 //Check if token follows the character and if it is an <OR>
                 //alternatives get special behavior.
                 if (CheckToken(compiledExpression, localPosition + 1) &&
                     GetToken(compiledExpression, localPosition + 1) == "<OR>")
-                {   
+                {
                     //Update local position, and check for another token following.
                     localPosition += "<OR>".Length; //We need to keep token length in consideration, otherwise we get exception.
-                    if(!CheckToken(compiledExpression, localPosition + 1))
+                    if (!CheckToken(compiledExpression, localPosition + 1))
                     {
                         //If there is none, we move two characters forward.
                         localPosition += 2;
@@ -234,11 +291,11 @@ namespace Regex
                     }
                     //Lookback if we suspect a preceding token.
                     else if (compiledExpression[localPosition - 1] == '>')
-                    {   
+                    {
                         //Move back to check if we can match expected token.
                         //If we get a match there we can declare this to be matched, but we don't move forward in string.
                         //The star repeats arbitrary number of times, we might need it later.
-                        if (CheckCompiled(character, 
+                        if (CheckCompiled(character,
                                 offset = -(GetToken(compiledExpression, tokenPositions[localTokenPosition - 1])).Length,
                                 tokenOffset = -1) == 0)
                         {
@@ -248,9 +305,9 @@ namespace Regex
                     }
                     //If there is more following the star we check that. And declare match accordingly. 
                     //This is essentially "zero lenght match" 
-                    else if(compiledExpression.Length > (localPosition + "<KLEENE_STAR>".Length))
+                    else if (compiledExpression.Length > (localPosition + "<KLEENE_STAR>".Length))
                     {
-                        characterMatch = CheckCompiled(character, "<KLEENE_STAR>".Length+offset, 1);                        
+                        characterMatch = CheckCompiled(character, "<KLEENE_STAR>".Length + offset, 1);
                     }
                     //Nothing beyond to compare with
                     else
@@ -301,7 +358,7 @@ namespace Regex
             //Consume entire expression, until we either find closing brackets or declare token invalid. 
             for (int index = localPosition; index < compiledExpression.Length; index++)
             {
-                if(compiledExpression[index] == '>')
+                if (compiledExpression[index] == '>')
                 {
                     tokenValid = true;
                     break;
@@ -342,9 +399,9 @@ namespace Regex
         }
         bool BelongsInCharClass(char character, char[] charclass)
         {
-            for (int characterIndex=0; characterIndex < charclass.Length; characterIndex++)
+            for (int characterIndex = 0; characterIndex < charclass.Length; characterIndex++)
             {
-                if(character == charclass[characterIndex])
+                if (character == charclass[characterIndex])
                 {
                     return true;
                 }
