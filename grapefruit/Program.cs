@@ -11,13 +11,15 @@ namespace grapefruit
             CheckFile(args[1], new Pattern(args[0]));
         }
 
-        static int CheckFile(string path, Pattern pattern,int outputMode = 0)
+        static int CheckFile(string path, Pattern pattern, int outputMode = 0)
         {
             if (File.Exists(path))
             {
                 using (StreamReader reader = File.OpenText(path))
                 {
                     string line;
+                    //Compile expression
+                    pattern.CompileExpression();
                     //Iterate over file
                     while ((line = reader.ReadLine()) != null)
                     {
