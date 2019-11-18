@@ -24,7 +24,7 @@ namespace grapefruit
                     while ((line = reader.ReadLine()) != null)
                     {
                         //Print lines with matches
-                        if (pattern.Check_expression(line) == 0 && outputMode == 0)
+                        if (pattern.CheckExpression(line) == 0 && outputMode == 0)
                         {
                             Console.WriteLine(line);
                         }
