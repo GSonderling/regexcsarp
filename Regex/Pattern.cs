@@ -5,13 +5,10 @@ namespace Regex
     {
         int position;
         string uncompiledExpression;
-        string compiledExpression;
+        string[] compiledExpression;
+        string[] alphabet;
 
         int tokenPosition;
-        int unresolvedPatternMismatch;
-        int subexpressionMismatch;
-        bool compiled;
-        int[] tokenPositions;
 
         Dictionary<char, string> tokenChars = new Dictionary<char, string> {
             /*
@@ -26,98 +23,123 @@ namespace Regex
             { ')', "<BRACKEND>"}
         };
 
+        Dictionary<string, Dictionary<string, string>> transitionTable;
+
         Dictionary<string, Pattern> subExpressions;
         public Pattern(string patternString)
         {
-            compiled = false;
             position = 0;
             tokenPosition = 0;
             uncompiledExpression = patternString;
-            unresolvedPatternMismatch = 0;
             subExpressions = new Dictionary<string, Pattern>();
-        }       
-
-        public int CompileExpression()
+            transitionTable = new Dictionary<string, Dictionary<string, string>>();
+            
+        }
+        
+        int PreCompilation()
         {
             int[] tokenPositionsTemp = new int[uncompiledExpression.Length];
-            int tokenPositionsIterator = 0;
-            //First find all subexpressions
-            int[] subexpressionsStartsTemp = new int[uncompiledExpression.Length];
-            int[] subexpressionsEndsTemp = new int[uncompiledExpression.Length];
 
-            int subexpressionStartIterator = 0;
-            int subexpressionEndIterator = 0;
-            Dictionary<string, string> subexpressionsTemp = new Dictionary<string, string>();
-            string subexpressionTemp = "";
-            string subexpressionTokenTemp = "";
+            int compiledExpressionIndex = 0;
+            int alphabetIndex = 0;
+            int tokenIndex = 0;
 
+            string[] compiledExpressionTemp = new string[uncompiledExpression.Length];
+            string[] alphabetTemp = new string[uncompiledExpression.Length];
             //Temporary token positions are initialized to impossible values
-            for (int index = 0; index < tokenPositionsTemp.Length; index++)
+            for (int index = 0; index < uncompiledExpression.Length; index++)
             {
-                tokenPositionsTemp[index] = -10;
-                subexpressionsStartsTemp[index] = -10;
-                subexpressionsEndsTemp[index] = -10;
+                compiledExpressionTemp[index] = "";
+                alphabetTemp[index] = "";
             }
 
             //For each char in uncompiled expression
             for (int index = 0; index < uncompiledExpression.Length; index++)
             {
-                if (uncompiledExpression[index] == '(')
-                {
-                    subexpressionsStartsTemp[subexpressionStartIterator] = index;
-                    subexpressionStartIterator++;
 
-                }
-                else if (uncompiledExpression[index] == ')')
-                {
-                    subexpressionsEndsTemp[subexpressionEndIterator] = index;
-                    subexpressionEndIterator++;
-                    subexpressionTokenTemp = "<SUB" + subexpressionsEndsTemp[subexpressionStartIterator-1] + ">";
-                    subexpressionsTemp.Add(subexpressionTokenTemp, subexpressionTemp);
-                    subexpressionTemp = "";
-                    compiledExpression += subexpressionTokenTemp;
-                    //position of token in compiled string is stored in list for future use
-                    tokenPositionsTemp[tokenPositionsIterator] = compiledExpression.Length - subexpressionTokenTemp.Length;
-                    //position list iterator is updated.
-                    tokenPositionsIterator++;
-                }
-                else if (subexpressionStartIterator > subexpressionEndIterator)
-                {
-                    subexpressionTemp += uncompiledExpression[index];
-                }
                 //Check if there is a special character at location
-                else if (tokenChars.ContainsKey(uncompiledExpression[index]))
+                if (tokenChars.ContainsKey(uncompiledExpression[index]))
                 {
                     //add token to compiled expression
-                    compiledExpression += tokenChars[uncompiledExpression[index]];
-                    //position of token in compiled string is stored in list for future use
-                    tokenPositionsTemp[tokenPositionsIterator] = compiledExpression.Length - tokenChars[uncompiledExpression[index]].Length;
-                    //position list iterator is updated.
-                    tokenPositionsIterator++;
+                    compiledExpressionTemp[index] = tokenChars[uncompiledExpression[index]];
+                    tokenIndex++;
                 }
                 else
                 {
                     //if there is no valid token, we just use original char.
-                    compiledExpression += uncompiledExpression[index];
+                    compiledExpressionTemp[index] = (string) uncompiledExpression[index].ToString();
+                    alphabetTemp[index] = (string)uncompiledExpression[index].ToString();
+                    alphabetIndex++;
                 }
             }
 
-            foreach (KeyValuePair<string, string> element in subexpressionsTemp)
+            //Count compiled len
+            int compiledLen = 0;
+
+            compiledExpression = new string[tokenIndex + alphabetIndex];
+            alphabet = new string[alphabetIndex];
+
+            for (int index = 0; index < tokenIndex + alphabetIndex; index++)
             {
-                subExpressions.Add(element.Key, new Pattern(element.Value));
-                subExpressions[element.Key].CompileExpression();
+                compiledExpression[compiledExpressionIndex] = compiledExpressionTemp[index];
+                compiledExpressionIndex++;
             }
-            //After the entire string is processed, we can save positions in final array.
-            tokenPositions = new int[tokenPositionsIterator];
-            /*
-             We save contents of tokenPositionsTemp into final array. 
-             */
-            for (int index = 0; index < tokenPositionsIterator; index++)
+            for(int index = 0; index < alphabetIndex; index++)
             {
-                tokenPositions[index] = tokenPositionsTemp[index];
+                alphabet[index] = alphabetTemp[index];
             }
+
+            return 0;
+        }
+
+        public int CompileExpression()
+        {
+            PreCompilation();
+            //Start state, end state;
+            transitionTable.Add("<S>", new Dictionary<string, string>());
+            transitionTable.Add("<F>", new Dictionary<string, string>());
+            //transitionTable.Add("<1>", new Dictionary<string, string>());
+            string currentState = "<S>";
+            string nextState = "<S>";
+            string previousState = "<S>";
+            string finalState = "<F>";
+            bool forward = true;
+            int stateIterator = 0;
+            string previousToken = "";
             //Set compiled flag to true. It's mostly pointless but might not be in the future.
-            compiled = true;
+            foreach (var token in compiledExpression)
+            {
+                
+                if (token.Length == 1 || token == "<DOT>")
+                {
+                    if (forward)
+                    {
+                        stateIterator++;
+                        previousState = currentState;
+                        currentState = nextState;
+                        nextState = "<" + stateIterator + ">";
+                        transitionTable.Add(nextState, new Dictionary<string, string>());
+                    }
+                    else
+                    {
+                        forward = true;
+                    }
+                    transitionTable[currentState].Add(token, nextState);
+                    previousToken = token;
+                }
+                else if (token == "<OR>")
+                {
+                    forward = false;
+                }
+                else if (token == "<KLEENE_STAR>")
+                {
+                    transitionTable[nextState].Add(previousToken, nextState);
+                    transitionTable[currentState].Add("", nextState);
+                }
+            }
+            currentState = nextState;
+            //Add transition to final state
+            transitionTable[currentState].Add("", finalState);
 
             return 0;
         }
@@ -127,373 +149,43 @@ namespace Regex
             int matchFound = 1;
             //We check every character in input string.
             int inputIndex = 0;
-            while(inputIndex < inputString.Length)
+            string currentState = "<S>";
+            while(inputIndex < inputString.Length && currentState != "<F>")
             {
-                //Two types of behavior, if the expression has been compiled we proceed here.
-                if (compiled)
+                //Check if we have valid subexpression to parse
+                if (transitionTable[currentState].ContainsKey((string) inputString[inputIndex].ToString()))
                 {
-                    //Check if we have valid subexpression to parse
-                    string thisToken = GetToken(compiledExpression, position);
-                    if (subExpressions.ContainsKey(thisToken))
-                    {
-                        //If we can fit the subexpression in...
-                        if (inputIndex + subExpressions[thisToken].compiledExpression.Length <= inputString.Length) {
-                            //we check if it matches and...
-                            subexpressionMismatch = subExpressions[thisToken].
-                                CheckExpression(inputString.Substring(inputIndex, subExpressions[thisToken].compiledExpression.Length));
-                            //if there is no mismatch move towards next token.
-                            if (subexpressionMismatch == 0)
-                            {
-                                position += GetToken(compiledExpression, position).Length;
-                                tokenPosition++;
-                                inputIndex += inputString.Substring(inputIndex, subExpressions[thisToken].compiledExpression.Length).Length;
-                            }
-                            else if (!ExpressionClear()) //Is there anything coming up that can help?
-                            {
-                                if (GetToken(compiledExpression, tokenPositions[tokenPosition + 1]) == "<OR>" ||
-                                    GetToken(compiledExpression, tokenPositions[tokenPosition + 1]) == "<KLEENE_STAR>")
-                                {
-                                    position += thisToken.Length;
-                                    tokenPosition++;
-                                    continue;
-                                }
-                            }
-                        }
-                    }
-                    //Eat normal char from input
-                    else
-                    {
-                        unresolvedPatternMismatch = CheckCompiled(inputString[inputIndex]);
-                    }
-                    //If we find no mismatches..
-                    if (unresolvedPatternMismatch == 0 && position == compiledExpression.Length)
-                    {   //and reach end of input string we return match. 
-                        matchFound = 0;
-                        break;
-                    } 
-                    else if (unresolvedPatternMismatch == 1)
-                    {
-                        position = 0;
-                    }
+                    currentState = transitionTable[currentState][(string)inputString[inputIndex].ToString()];
+                }
+                else if (transitionTable[currentState].ContainsKey("<DOT>"))
+                {
+                    currentState = transitionTable[currentState]["<DOT>"];
+                }
+                else if (transitionTable[currentState].ContainsKey(""))
+                {
+                    currentState = transitionTable[currentState][""];
+                    inputIndex--;
                 }
                 else
                 {
-                    Check(inputString[inputIndex]);
-                    if (position == uncompiledExpression.Length)
-                    {
-                        position = 0;
-                        matchFound = 0;
-                    }
+                    currentState = "<S>";
                 }
+
                 inputIndex++;
             }
-            //If we haven't found a match return 1 and reset counter. 
-            if (unresolvedPatternMismatch == 0 && ExpressionClear())
+            while (transitionTable[currentState].ContainsKey(""))
+            {
+                currentState = transitionTable[currentState][""];
+
+            }
+            if (currentState == "<F>")
             {
                 matchFound = 0;
-            }
-
+            }        
             position = 0;
             tokenPosition = 0;            
 
             return matchFound;
-        }
-        int Check(char character, int offset = 0)
-        {
-            int local_position = position + offset;
-            if (uncompiledExpression.Length <= local_position)
-            {
-                return 0;
-            }
-            if (character == uncompiledExpression[local_position] ||
-                uncompiledExpression[local_position] == '.')
-            {
-                if (uncompiledExpression.Length > local_position + 1)
-                {
-                    if (uncompiledExpression[local_position + 1] == '|')
-                    {
-                        position += 3;
-                        return 0;
-                    }
-                }
-
-                position++;
-
-                return 0;
-            }
-            if (uncompiledExpression[local_position] == '*')
-            {
-                if (Check(character, -1) == 0)
-                {
-                    return 0;
-                }
-                else
-                {
-                    position++;
-                    return 0;
-                }
-            }
-            if (uncompiledExpression.Length <= local_position + 1)
-            {
-                position = 0;
-                return 1;
-            }
-            if (uncompiledExpression[local_position + 1] == '*')
-            {
-                position++;
-                Check(character);
-                return 0;
-            }
-            if (uncompiledExpression.Length < local_position + 2)
-            {
-                position = 0;
-                return 1;
-            }
-            if (uncompiledExpression[local_position + 1] == '|')
-            {
-                if (Check(character, 2) == 0)
-                {
-                    position += 2;
-                    return 0;
-                }
-                else return 1;
-            }
-            position = 0;
-            return 1;
-        }
-
-        int CheckCompiled(char inputChunk, int offset = 0, int tokenOffset = 0)
-        {
-            /*
-             Check a character against compiled expression.
-             Allows empty character now. 
-             */
-            int localPosition = position + offset;
-            int localTokenPosition = tokenPosition + tokenOffset;
-            int characterMatch = 1;
-            char inputChar = inputChunk;
-            //if(inputChunk.Length == 1)
-            //{
-            //    inputChar = inputChunk[0];
-            //    characterMatch = CheckCompiledChar(inputChar, offset, tokenOffset);
-            //}
-            //In case we get invalid position
-            if( localPosition < 0)
-            {
-                return characterMatch;
-            }
-
-            //characterMatch = CheckCompiledChar(inputChar, offset, tokenOffset);
-
-            //If the character matches one present in compiled string...
-            if (inputChunk == compiledExpression[localPosition])
-            {
-                //Check if token follows the character and if it is an <OR>
-                //alternatives get special behavior.
-                if (CheckToken(compiledExpression, localPosition + 1) &&
-                    GetToken(compiledExpression, localPosition + 1) == "<OR>")
-                {
-                    //Update local position, and check for another token following.
-                    localPosition += "<OR>".Length; //We need to keep token length in consideration, otherwise we get exception.
-                    if (!CheckToken(compiledExpression, localPosition + 1))
-                    {
-                        //If there is none, we move two characters forward.
-                        localPosition += 2;
-                    }
-                    //Set position to localPosition since we matched this part of string. 
-                    position = localPosition;
-                }
-                else
-                {
-                    //Move to next character in compiled string.
-                    position = localPosition + 1;
-                }
-
-                characterMatch = 0;
-            }
-            //IF we reach token...            
-            else if (CheckToken(compiledExpression, localPosition))
-            {
-                
-                if (GetToken(compiledExpression, localPosition) == "<DOT>")
-                {
-                    position += "<DOT>".Length + offset;
-                    tokenPosition += 1 + tokenOffset;
-                    characterMatch = 0;
-                }
-                //Kleene star behavior
-                else if (GetToken(compiledExpression, localPosition) == "<KLEENE_STAR>")
-                {
-                    //Lookback for exact character match
-                    if (CheckCompiled(inputChunk, -1) == 0)
-                    {
-                        //Position unchanged
-                        characterMatch = 0;
-                    }
-                    //Lookback if we suspect a preceding token.
-                    else if (compiledExpression[localPosition - 1] == '>')
-                    {
-                        //Check if star follows a subexpression token and that subexpression was matched
-                        if (subExpressions.ContainsKey(GetToken(compiledExpression, tokenPositions[localTokenPosition-1])) && 
-                            subexpressionMismatch == 0)
-                        {
-                            characterMatch = 0;
-                        }
-                        //Move back to check if we can match expected token.
-                        //If we get a match there we can declare this to be matched, but we don't move forward in string.
-                        //The star repeats arbitrary number of times, we might need it later.
-                        else if (CheckCompiled(inputChunk,
-                                offset = -(GetToken(compiledExpression, tokenPositions[localTokenPosition - 1])).Length,
-                                tokenOffset = -1) == 0)
-                        {
-                            characterMatch = 0;
-                        }
-                    }
-                    //If there is more following the star we check that. And declare match accordingly.                    
-                    else if (compiledExpression.Length > (localPosition + "<KLEENE_STAR>".Length))
-                    {
-                        characterMatch = CheckCompiled(inputChunk, "<KLEENE_STAR>".Length + offset);
-                    }
-                    //Nothing beyond to compare with, so we skip forward, essentially a zero length match
-                    else
-                    {
-                        position = localPosition + "<KLEENE_STAR>".Length;
-                        characterMatch = 1;
-                    }
-                }
-                //If we found alternative <OR> token
-                else if (GetToken(compiledExpression, localPosition) == "<OR>")
-                {
-                    //Lookback
-                    if (CheckCompiled(inputChunk, -1) == 0)
-                    {
-                        //Position unchanged
-                        characterMatch = 0;
-                    }
-                    //Lookforward
-                    else if (compiledExpression.Length > (localPosition + "<OR>".Length))
-                    {
-                        characterMatch = CheckCompiled(inputChunk, "<OR>".Length + offset);
-                    }
-                    //Nothing beyond to compare with
-                    else
-                    {
-                        characterMatch = 1;
-                    }
-                }
-            }
-            //Look forward for token
-            else if (CheckToken(compiledExpression, localPosition + 1))
-            {
-                characterMatch = CheckCompiled(inputChunk, offset = 1);
-            }
-
-            if (position == compiledExpression.Length)
-            {
-                characterMatch = 0;
-            }
-
-            return characterMatch;
-        }
-
-        bool CheckToken(string compiledExpression, int localPosition)
-        {
-            /*
-             Check if token exists starting at specified position.
-             */
-            bool tokenValid = false;
-            if (localPosition < compiledExpression.Length)
-            {
-                if (compiledExpression[localPosition] == '<')
-                {
-                    //Consume entire expression, until we either find closing brackets or declare token invalid. 
-                    for (int index = localPosition; index < compiledExpression.Length; index++)
-                    {
-                        if (compiledExpression[index] == '>')
-                        {
-                            tokenValid = true;
-                            break;
-                        }
-                    }
-                }
-            }                   
-
-            return tokenValid;
-        }
-        string GetToken(string compiledExpression, int localPosition)
-        {
-            /*
-             Retrieve token from compiled expression. More powerful version of CheckToken.
-             Could combine them, but it would take a rewrite of conditions into more unseemely form.
-             */
-            int cutoff = localPosition;
-            string discoveredToken;
-            //Find end of token string
-            for (int index = localPosition; index < compiledExpression.Length; index++)
-            {
-                if (compiledExpression[index] == '>')
-                {
-                    cutoff = index;
-                    break;
-                }
-            }
-            //If we havent found token end, we declare it to be an <ERROR> token and move on.
-            if (cutoff == localPosition)
-            {
-                discoveredToken = "<ERROR>";
-            }
-            else
-            {
-                //Otherwise we retrieve the substring and return it.
-                discoveredToken = compiledExpression.Substring(localPosition, (cutoff + 1) - localPosition);
-            }
-
-            return discoveredToken;
-        }
-        bool BelongsInCharClass(char character, char[] charclass)
-        {
-            for (int characterIndex = 0; characterIndex < charclass.Length; characterIndex++)
-            {
-                if (character == charclass[characterIndex])
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-        
-        bool ExpressionClear()
-        {
-            /*Checks if there is anything left to parse in our compiled expression.
-             
-             */
-            bool clear = false;
-            //Check for Kleen star
-            if (CheckToken(compiledExpression, position)) {
-                //Check for Kleen star
-                if (GetToken(compiledExpression, position + GetToken(compiledExpression, position).Length) == "<KLEENE_STAR>" ||
-                    GetToken(compiledExpression, position) == "<KLEENE_STAR>")
-                {
-                    clear = true;
-                }
-                //Check for resolved <OR>/alternation
-                else if (GetToken(compiledExpression, position) == "<OR>")
-                {
-                    clear = true;
-                }
-            }
-            else if(CheckToken(compiledExpression, position + 1))
-            {
-                //Check for Kleen star
-                if (GetToken(compiledExpression, position + 1) == "<KLEENE_STAR>")
-                {
-                    clear = true;
-                }
-            }
-            //Check for resolved <OR>/alternation
-            
-
-            return clear;
         }
     }
 }
