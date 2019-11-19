@@ -14,64 +14,91 @@ namespace RegexTester
             try
             {
                 Pattern pattern = new Pattern("Hel*o");
-                pattern.Compile_expression();
-                Debug.Assert(pattern.Check_expression("Hello") == 0);
-                Debug.Assert(pattern.Check_expression("Hello World") == 0);
-                Debug.Assert(pattern.Check_expression("ajaHello World") == 0);
-                Debug.Assert(pattern.Check_expression("akalHello") == 0);
-                Debug.Assert(pattern.Check_expression("abcdHellobcsdWorld") == 0);
-                Debug.Assert(pattern.Check_expression("10Hello5557jjkWorld") == 0);
+                pattern.CompileExpression();
+                Debug.Assert(pattern.CheckExpression("Hello") == 0);
+                Debug.Assert(pattern.CheckExpression("Hello World") == 0);
+                Debug.Assert(pattern.CheckExpression("ajaHello World") == 0);
+                Debug.Assert(pattern.CheckExpression("akalHello") == 0);
+                Debug.Assert(pattern.CheckExpression("abcdHellobcsdWorld") == 0);
+                Debug.Assert(pattern.CheckExpression("10Hello5557jjkWorld") == 0);
 
                 //Ignore char
                 pattern = new Pattern("Hellg*o");
-                pattern.Compile_expression();
-                Debug.Assert(pattern.Check_expression("Hello") == 0);
-                Debug.Assert(pattern.Check_expression("Hello World") == 0);
-                Debug.Assert(pattern.Check_expression("ajaHello World") == 0);
-                Debug.Assert(pattern.Check_expression("akalHello") == 0);
-                Debug.Assert(pattern.Check_expression("abcdHellobcsdWorld") == 0);
-                Debug.Assert(pattern.Check_expression("10Hello5557jjkWorld") == 0);
+                pattern.CompileExpression();
+                Debug.Assert(pattern.CheckExpression("Hello") == 0);
+                Debug.Assert(pattern.CheckExpression("Hello World") == 0);
+                Debug.Assert(pattern.CheckExpression("ajaHello World") == 0);
+                Debug.Assert(pattern.CheckExpression("akalHello") == 0);
+                Debug.Assert(pattern.CheckExpression("abcdHellobcsdWorld") == 0);
+                Debug.Assert(pattern.CheckExpression("10Hello5557jjkWorld") == 0);
+
+                //Ignore final char
+                pattern = new Pattern("Hellog*");
+                pattern.CompileExpression();
+                Debug.Assert(pattern.CheckExpression("Hello") == 0);
+                Debug.Assert(pattern.CheckExpression("Hello World") == 0);
+                Debug.Assert(pattern.CheckExpression("ajaHello World") == 0);
+                Debug.Assert(pattern.CheckExpression("akalHello") == 0);
+                Debug.Assert(pattern.CheckExpression("abcdHellobcsdWorld") == 0);
+                Debug.Assert(pattern.CheckExpression("10Hello5557jjkWorld") == 0);
 
                 //Dot tests
                 pattern = new Pattern("Hel.o");
-                pattern.Compile_expression();
-                Debug.Assert(pattern.Check_expression("Hello") == 0);
-                Debug.Assert(pattern.Check_expression("Hello World") == 0);
-                Debug.Assert(pattern.Check_expression("ajaHello World") == 0);
-                Debug.Assert(pattern.Check_expression("akalHello") == 0);
-                Debug.Assert(pattern.Check_expression("abcdHellobcsdWorld") == 0);
-                Debug.Assert(pattern.Check_expression("10Hello5557jjkWorld") == 0);
+                pattern.CompileExpression();
+                Debug.Assert(pattern.CheckExpression("Hello") == 0);
+                Debug.Assert(pattern.CheckExpression("Hello World") == 0);
+                Debug.Assert(pattern.CheckExpression("ajaHello World") == 0);
+                Debug.Assert(pattern.CheckExpression("akalHello") == 0);
+                Debug.Assert(pattern.CheckExpression("abcdHellobcsdWorld") == 0);
+                Debug.Assert(pattern.CheckExpression("10Hello5557jjkWorld") == 0);
 
                 //Alternative tests
                 pattern = new Pattern("abc|d");
-                pattern.Compile_expression();
-                Debug.Assert(pattern.Check_expression("abc") == 0);
-                Debug.Assert(pattern.Check_expression("abd") == 0);
+                pattern.CompileExpression();
+                Debug.Assert(pattern.CheckExpression("abc") == 0);
+                Debug.Assert(pattern.CheckExpression("abd") == 0);
                 pattern = new Pattern("..c|d");
-                pattern.Compile_expression();
-                Debug.Assert(pattern.Check_expression("abc") == 0);
-                Debug.Assert(pattern.Check_expression("abd") == 0);
-                Debug.Assert(pattern.Check_expression("sxd") == 0);
-                Debug.Assert(pattern.Check_expression("sxc") == 0);
+                pattern.CompileExpression();
+                Debug.Assert(pattern.CheckExpression("abc") == 0);
+                Debug.Assert(pattern.CheckExpression("abd") == 0);
+                Debug.Assert(pattern.CheckExpression("sxd") == 0);
+                Debug.Assert(pattern.CheckExpression("sxc") == 0);
 
                 //GET ALL TEST. Dot and star eww
+                //Here start problems. The pattern is matched, but procedure doesn't reach end of string.
                 pattern = new Pattern(".*");
-                pattern.Compile_expression();
-                Debug.Assert(pattern.Check_expression("Hello") == 0);
-                Debug.Assert(pattern.Check_expression("Hello World") == 0);
-                Debug.Assert(pattern.Check_expression("ajaHello World") == 0);
-                Debug.Assert(pattern.Check_expression("akalHello") == 0);
-                Debug.Assert(pattern.Check_expression("abcdHellobcsdWorld") == 0);
-                Debug.Assert(pattern.Check_expression("10Hello5557jjkWorld") == 0);
-                Debug.Assert(pattern.Check_expression("Heggo") == 0);
-                Debug.Assert(pattern.Check_expression("Heggo World") == 0);
-                Debug.Assert(pattern.Check_expression("HELLO WORLD") == 0);
-                Debug.Assert(pattern.Check_expression("ajaHeo World") == 0);
-                Debug.Assert(pattern.Check_expression("oll*eH") == 0);
-                Debug.Assert(pattern.Check_expression("abcdhellobcsdWorld") == 0);
-                Debug.Assert(pattern.Check_expression("10HELLO5557jjkWorld") == 0);
-                Debug.Assert(pattern.Check_expression("abcde fghida46575jklmn     opqrstuv fd558456xyz") == 0);
+                pattern.CompileExpression();
+                Debug.Assert(pattern.CheckExpression("Hello") == 0); 
+                Debug.Assert(pattern.CheckExpression("Hello World") == 0);
+                Debug.Assert(pattern.CheckExpression("ajaHello World") == 0);
+                Debug.Assert(pattern.CheckExpression("akalHello") == 0);
+                Debug.Assert(pattern.CheckExpression("abcdHellobcsdWorld") == 0);
+                Debug.Assert(pattern.CheckExpression("10Hello5557jjkWorld") == 0);
+                Debug.Assert(pattern.CheckExpression("Heggo") == 0);
+                Debug.Assert(pattern.CheckExpression("Heggo World") == 0);
+                Debug.Assert(pattern.CheckExpression("HELLO WORLD") == 0);
+                Debug.Assert(pattern.CheckExpression("ajaHeo World") == 0);
+                Debug.Assert(pattern.CheckExpression("oll*eH") == 0);
+                Debug.Assert(pattern.CheckExpression("abcdhellobcsdWorld") == 0);
+                Debug.Assert(pattern.CheckExpression("10HELLO5557jjkWorld") == 0);
+                Debug.Assert(pattern.CheckExpression("abcde fghida46575jklmn     opqrstuv fd558456xyz") == 0);
 
+                //Subexpression tests
+                pattern = new Pattern("He(llo)*");
+                pattern.CompileExpression();
+                Debug.Assert(pattern.CheckExpression("Hello") == 0);
+                Debug.Assert(pattern.CheckExpression("Hellollo") == 0);
+                Debug.Assert(pattern.CheckExpression("Hellollollollollollollo") == 0);
+                Debug.Assert(pattern.CheckExpression("aHello") == 0);
+                Debug.Assert(pattern.CheckExpression("abcdefghaekepafha;e  kfa;eoihf;kldh;dklhfjkahdjkfhkl Hellollollollollollollo") == 0);
+                Debug.Assert(pattern.CheckExpression("He") == 0);
+
+                pattern = new Pattern("(ab)|(bc)");
+                pattern.CompileExpression();
+                Debug.Assert(pattern.CheckExpression("ab") == 0);
+                //Debug.Assert(pattern.CheckExpression("bc") == 0);
+                //Debug.Assert(pattern.CheckExpression("abc") == 0);
+                
                 Console.WriteLine("Positive Pattern assertions: OK");
             }
             catch (Exception e)
@@ -86,23 +113,35 @@ namespace RegexTester
             try
             {
                 Pattern pattern = new Pattern("Hell*o");
-                Debug.Assert(pattern.Check_expression("Heggo") == 1);
-                Debug.Assert(pattern.Check_expression("Heggo World") == 1);
-                Debug.Assert(pattern.Check_expression("HELLO WORLD") == 1);
-                Debug.Assert(pattern.Check_expression("ajaHeo World") == 1);
-                Debug.Assert(pattern.Check_expression("oll*eH") == 1);
-                Debug.Assert(pattern.Check_expression("abcdhellobcsdWorld") == 1);
-                Debug.Assert(pattern.Check_expression("10HELLO5557jjkWorld") == 1);
+                pattern.CompileExpression();
+                Debug.Assert(pattern.CheckExpression("Heggo") == 1);
+                Debug.Assert(pattern.CheckExpression("Heggo World") == 1);
+                Debug.Assert(pattern.CheckExpression("HELLO WORLD") == 1);
+                Debug.Assert(pattern.CheckExpression("ajaHeo World") == 1);
+                Debug.Assert(pattern.CheckExpression("oll*eH") == 1);
+                Debug.Assert(pattern.CheckExpression("abcdhellobcsdWorld") == 1);
+                Debug.Assert(pattern.CheckExpression("10HELLO5557jjkWorld") == 1);
 
                 // Dot tests
                 pattern = new Pattern("H.llo");
-                Debug.Assert(pattern.Check_expression("Heggo") == 1);
-                Debug.Assert(pattern.Check_expression("Heggo World") == 1);
-                Debug.Assert(pattern.Check_expression("HELLO WORLD") == 1);
-                Debug.Assert(pattern.Check_expression("ajaHeo World") == 1);
-                Debug.Assert(pattern.Check_expression("oll*eH") == 1);
-                Debug.Assert(pattern.Check_expression("abcdhellobcsdWorld") == 1);
-                Debug.Assert(pattern.Check_expression("10HELLO5557jjkWorld") == 1);
+                pattern.CompileExpression();
+                Debug.Assert(pattern.CheckExpression("Heggo") == 1);
+                Debug.Assert(pattern.CheckExpression("Heggo World") == 1);
+                Debug.Assert(pattern.CheckExpression("HELLO WORLD") == 1);
+                Debug.Assert(pattern.CheckExpression("ajaHeo World") == 1);
+                Debug.Assert(pattern.CheckExpression("oll*eH") == 1);
+                Debug.Assert(pattern.CheckExpression("abcdhellobcsdWorld") == 1);
+                Debug.Assert(pattern.CheckExpression("10HELLO5557jjkWorld") == 1);
+
+                // Subexpression tests
+                pattern = new Pattern("He(llo)*");
+                pattern.CompileExpression();
+                Debug.Assert(pattern.CheckExpression("helo") == 1);
+                Debug.Assert(pattern.CheckExpression("llollollollohe") == 1);
+                Debug.Assert(pattern.CheckExpression("hello") == 1);
+                Debug.Assert(pattern.CheckExpression("HElllllllo") == 1);
+                Debug.Assert(pattern.CheckExpression("eHlllllo") == 1);
+                Debug.Assert(pattern.CheckExpression("HEloloooooooo") == 1);
 
                 Console.WriteLine("Negative Pattern assertions: OK");
             }
