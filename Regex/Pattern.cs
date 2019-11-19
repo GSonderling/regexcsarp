@@ -272,49 +272,20 @@ namespace Regex
             int localTokenPosition = tokenPosition + tokenOffset;
             int characterMatch = 1;
             char inputChar = inputChunk;
-            //if(inputChunk.Length == 1)
-            //{
-            //    inputChar = inputChunk[0];
-            //    characterMatch = CheckCompiledChar(inputChar, offset, tokenOffset);
-            //}
+    
             //In case we get invalid position
             if( localPosition < 0)
             {
                 return characterMatch;
             }
 
-            //characterMatch = CheckCompiledChar(inputChar, offset, tokenOffset);
-
             //If the character matches one present in compiled string...
-            if (inputChunk == compiledExpression[localPosition])
-            {
-                //Check if token follows the character and if it is an <OR>
-                //alternatives get special behavior.
-                if (CheckToken(compiledExpression, localPosition + 1) &&
-                    GetToken(compiledExpression, localPosition + 1) == "<OR>")
-                {
-                    //Update local position, and check for another token following.
-                    localPosition += "<OR>".Length; //We need to keep token length in consideration, otherwise we get exception.
-                    if (!CheckToken(compiledExpression, localPosition + 1))
-                    {
-                        //If there is none, we move two characters forward.
-                        localPosition += 2;
-                    }
-                    //Set position to localPosition since we matched this part of string. 
-                    position = localPosition;
-                }
-                else
-                {
-                    //Move to next character in compiled string.
-                    position = localPosition + 1;
-                }
+            characterMatch = CheckCompiledChar(inputChar, offset, tokenOffset);
 
-                characterMatch = 0;
-            }
-            //IF we reach token...            
-            else if (CheckToken(compiledExpression, localPosition))
+            //IF we reach token...           
+            if (CheckToken(compiledExpression, localPosition) && characterMatch != 0)
             {
-                
+
                 if (GetToken(compiledExpression, localPosition) == "<DOT>")
                 {
                     position += "<DOT>".Length + offset;
@@ -334,7 +305,7 @@ namespace Regex
                     else if (compiledExpression[localPosition - 1] == '>')
                     {
                         //Check if star follows a subexpression token and that subexpression was matched
-                        if (subExpressions.ContainsKey(GetToken(compiledExpression, tokenPositions[localTokenPosition-1])) && 
+                        if (subExpressions.ContainsKey(GetToken(compiledExpression, tokenPositions[localTokenPosition - 1])) &&
                             subexpressionMismatch == 0)
                         {
                             characterMatch = 0;
@@ -383,7 +354,7 @@ namespace Regex
                 }
             }
             //Look forward for token
-            else if (CheckToken(compiledExpression, localPosition + 1))
+            else if (CheckToken(compiledExpression, localPosition + 1) && characterMatch != 0)
             {
                 characterMatch = CheckCompiled(inputChunk, offset = 1);
             }
@@ -419,6 +390,120 @@ namespace Regex
             }                   
 
             return tokenValid;
+        }
+
+        int CheckCompiledChar(char inputChar, int offset = 0, int tokenOffset = 0)
+        {
+            int localPosition = position + offset;
+            int localTokenPosition = tokenPosition + tokenOffset;
+            int characterMatch = 1;
+
+            //If the character matches one present in compiled string...
+            if (inputChar == compiledExpression[localPosition])
+            {
+                //Check if token follows the character and if it is an <OR>
+                //alternatives get special behavior.
+                if (CheckToken(compiledExpression, localPosition + 1) &&
+                    GetToken(compiledExpression, localPosition + 1) == "<OR>")
+                {
+                    //Update local position, and check for another token following.
+                    localPosition += "<OR>".Length; //We need to keep token length in consideration, otherwise we get exception.
+                    if (!CheckToken(compiledExpression, localPosition + 1))
+                    {
+                        //If there is none, we move two characters forward.
+                        localPosition += 2;
+                    }
+                    //Set position to localPosition since we matched this part of string. 
+                    position = localPosition;
+                }
+                else
+                {
+                    //Move to next character in compiled string.
+                    position = localPosition + 1;
+                }
+
+                characterMatch = 0;
+            }
+            return characterMatch;
+        }
+
+        int CheckCompiledToken(char inputChunk, int offset = 0, int tokenOffset = 0)
+        {
+            int localPosition = position + offset;
+            int localTokenPosition = tokenPosition + tokenOffset;
+            int characterMatch = 1;
+
+            if (CheckToken(compiledExpression, localPosition))
+            {
+
+                if (GetToken(compiledExpression, localPosition) == "<DOT>")
+                {
+                    position += "<DOT>".Length + offset;
+                    tokenPosition += 1 + tokenOffset;
+                    characterMatch = 0;
+                }
+                //Kleene star behavior
+                else if (GetToken(compiledExpression, localPosition) == "<KLEENE_STAR>")
+                {
+                    //Lookback for exact character match
+                    if (CheckCompiled(inputChunk, -1) == 0)
+                    {
+                        //Position unchanged
+                        characterMatch = 0;
+                    }
+                    //Lookback if we suspect a preceding token.
+                    else if (compiledExpression[localPosition - 1] == '>')
+                    {
+                        //Check if star follows a subexpression token and that subexpression was matched
+                        if (subExpressions.ContainsKey(GetToken(compiledExpression, tokenPositions[localTokenPosition - 1])) &&
+                            subexpressionMismatch == 0)
+                        {
+                            characterMatch = 0;
+                        }
+                        //Move back to check if we can match expected token.
+                        //If we get a match there we can declare this to be matched, but we don't move forward in string.
+                        //The star repeats arbitrary number of times, we might need it later.
+                        else if (CheckCompiled(inputChunk,
+                                offset = -(GetToken(compiledExpression, tokenPositions[localTokenPosition - 1])).Length,
+                                tokenOffset = -1) == 0)
+                        {
+                            characterMatch = 0;
+                        }
+                    }
+                    //If there is more following the star we check that. And declare match accordingly.                    
+                    else if (compiledExpression.Length > (localPosition + "<KLEENE_STAR>".Length))
+                    {
+                        characterMatch = CheckCompiled(inputChunk, "<KLEENE_STAR>".Length + offset);
+                    }
+                    //Nothing beyond to compare with, so we skip forward, essentially a zero length match
+                    else
+                    {
+                        position = localPosition + "<KLEENE_STAR>".Length;
+                        characterMatch = 1;
+                    }
+                }
+                //If we found alternative <OR> token
+                else if (GetToken(compiledExpression, localPosition) == "<OR>")
+                {
+                    //Lookback
+                    if (CheckCompiled(inputChunk, -1) == 0)
+                    {
+                        //Position unchanged
+                        characterMatch = 0;
+                    }
+                    //Lookforward
+                    else if (compiledExpression.Length > (localPosition + "<OR>".Length))
+                    {
+                        characterMatch = CheckCompiled(inputChunk, "<OR>".Length + offset);
+                    }
+                    //Nothing beyond to compare with
+                    else
+                    {
+                        characterMatch = 1;
+                    }
+                }
+            }
+            return characterMatch;
         }
         string GetToken(string compiledExpression, int localPosition)
         {
@@ -490,9 +575,7 @@ namespace Regex
                     clear = true;
                 }
             }
-            //Check for resolved <OR>/alternation
             
-
             return clear;
         }
     }
