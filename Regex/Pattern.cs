@@ -72,7 +72,7 @@ namespace Regex
                 {
                     subexpressionsEndsTemp[subexpressionEndIterator] = index;
                     subexpressionEndIterator++;
-                    subexpressionTokenTemp = "<SUB" + subexpressionsEndsTemp[subexpressionStartIterator] + ">";
+                    subexpressionTokenTemp = "<SUB" + subexpressionsEndsTemp[subexpressionStartIterator-1] + ">";
                     subexpressionsTemp.Add(subexpressionTokenTemp, subexpressionTemp);
                     subexpressionTemp = "";
                     compiledExpression += subexpressionTokenTemp;
@@ -126,23 +126,41 @@ namespace Regex
         {
             int matchFound = 1;
             //We check every character in input string.
-            for (int inputIndex = 0; inputIndex < inputString.Length; inputIndex++)
+            int inputIndex = 0;
+            while(inputIndex < inputString.Length)
             {
                 //Two types of behavior, if the expression has been compiled we proceed here.
                 if (compiled)
                 {
-                    if (subExpressions.ContainsKey(GetToken(compiledExpression, position)))
+                    //Check if we have valid subexpression to parse
+                    string thisToken = GetToken(compiledExpression, position);
+                    if (subExpressions.ContainsKey(thisToken))
                     {
-                        subexpressionMismatch = subExpressions[GetToken(compiledExpression, position)].
-                            CheckExpression(inputString.Substring(inputIndex, subExpressions[GetToken(compiledExpression, position)].compiledExpression.Length));
-                        
-                        if(subexpressionMismatch == 0)
-                        {
-                            position += GetToken(compiledExpression, position).Length;
-                            tokenPosition++;
+                        //If we can fit the subexpression in...
+                        if (inputIndex + subExpressions[thisToken].compiledExpression.Length <= inputString.Length) {
+                            //we check if it matches and...
+                            subexpressionMismatch = subExpressions[thisToken].
+                                CheckExpression(inputString.Substring(inputIndex, subExpressions[thisToken].compiledExpression.Length));
+                            //if there is no mismatch move towards next token.
+                            if (subexpressionMismatch == 0)
+                            {
+                                position += GetToken(compiledExpression, position).Length;
+                                tokenPosition++;
+                                inputIndex += inputString.Substring(inputIndex, subExpressions[thisToken].compiledExpression.Length).Length;
+                            }
+                            else if (!ExpressionClear()) //Is there anything coming up that can help?
+                            {
+                                if (GetToken(compiledExpression, tokenPositions[tokenPosition + 1]) == "<OR>" ||
+                                    GetToken(compiledExpression, tokenPositions[tokenPosition + 1]) == "<KLEENE_STAR>")
+                                {
+                                    position += thisToken.Length;
+                                    tokenPosition++;
+                                    continue;
+                                }
+                            }
                         }
                     }
-                    //If we find Dot we move right by one in the token list and by exact length of <DOT> in compiled string
+                    //Eat normal char from input
                     else
                     {
                         unresolvedPatternMismatch = CheckCompiled(inputString[inputIndex]);
@@ -167,6 +185,7 @@ namespace Regex
                         matchFound = 0;
                     }
                 }
+                inputIndex++;
             }
             //If we haven't found a match return 1 and reset counter. 
             if (unresolvedPatternMismatch == 0 && ExpressionClear())
@@ -243,7 +262,7 @@ namespace Regex
             return 1;
         }
 
-        int CheckCompiled(char character, int offset = 0, int tokenOffset = 0)
+        int CheckCompiled(char inputChunk, int offset = 0, int tokenOffset = 0)
         {
             /*
              Check a character against compiled expression.
@@ -252,13 +271,22 @@ namespace Regex
             int localPosition = position + offset;
             int localTokenPosition = tokenPosition + tokenOffset;
             int characterMatch = 1;
+            char inputChar = inputChunk;
+            //if(inputChunk.Length == 1)
+            //{
+            //    inputChar = inputChunk[0];
+            //    characterMatch = CheckCompiledChar(inputChar, offset, tokenOffset);
+            //}
             //In case we get invalid position
             if( localPosition < 0)
             {
                 return characterMatch;
             }
+
+            //characterMatch = CheckCompiledChar(inputChar, offset, tokenOffset);
+
             //If the character matches one present in compiled string...
-            if (character == compiledExpression[localPosition])
+            if (inputChunk == compiledExpression[localPosition])
             {
                 //Check if token follows the character and if it is an <OR>
                 //alternatives get special behavior.
@@ -283,9 +311,10 @@ namespace Regex
 
                 characterMatch = 0;
             }
-            //IF we reach token...
+            //IF we reach token...            
             else if (CheckToken(compiledExpression, localPosition))
             {
+                
                 if (GetToken(compiledExpression, localPosition) == "<DOT>")
                 {
                     position += "<DOT>".Length + offset;
@@ -296,7 +325,7 @@ namespace Regex
                 else if (GetToken(compiledExpression, localPosition) == "<KLEENE_STAR>")
                 {
                     //Lookback for exact character match
-                    if (CheckCompiled(character, -1) == 0)
+                    if (CheckCompiled(inputChunk, -1) == 0)
                     {
                         //Position unchanged
                         characterMatch = 0;
@@ -313,7 +342,7 @@ namespace Regex
                         //Move back to check if we can match expected token.
                         //If we get a match there we can declare this to be matched, but we don't move forward in string.
                         //The star repeats arbitrary number of times, we might need it later.
-                        else if (CheckCompiled(character,
+                        else if (CheckCompiled(inputChunk,
                                 offset = -(GetToken(compiledExpression, tokenPositions[localTokenPosition - 1])).Length,
                                 tokenOffset = -1) == 0)
                         {
@@ -323,7 +352,7 @@ namespace Regex
                     //If there is more following the star we check that. And declare match accordingly.                    
                     else if (compiledExpression.Length > (localPosition + "<KLEENE_STAR>".Length))
                     {
-                        characterMatch = CheckCompiled(character, "<KLEENE_STAR>".Length + offset);
+                        characterMatch = CheckCompiled(inputChunk, "<KLEENE_STAR>".Length + offset);
                     }
                     //Nothing beyond to compare with, so we skip forward, essentially a zero length match
                     else
@@ -336,7 +365,7 @@ namespace Regex
                 else if (GetToken(compiledExpression, localPosition) == "<OR>")
                 {
                     //Lookback
-                    if (CheckCompiled(character, -1) == 0)
+                    if (CheckCompiled(inputChunk, -1) == 0)
                     {
                         //Position unchanged
                         characterMatch = 0;
@@ -344,7 +373,7 @@ namespace Regex
                     //Lookforward
                     else if (compiledExpression.Length > (localPosition + "<OR>".Length))
                     {
-                        characterMatch = CheckCompiled(character, "<OR>".Length + offset);
+                        characterMatch = CheckCompiled(inputChunk, "<OR>".Length + offset);
                     }
                     //Nothing beyond to compare with
                     else
@@ -356,8 +385,9 @@ namespace Regex
             //Look forward for token
             else if (CheckToken(compiledExpression, localPosition + 1))
             {
-                characterMatch = CheckCompiled(character, offset = 1);
+                characterMatch = CheckCompiled(inputChunk, offset = 1);
             }
+
             if (position == compiledExpression.Length)
             {
                 characterMatch = 0;
@@ -438,21 +468,30 @@ namespace Regex
              
              */
             bool clear = false;
+            //Check for Kleen star
             if (CheckToken(compiledExpression, position)) {
+                //Check for Kleen star
                 if (GetToken(compiledExpression, position + GetToken(compiledExpression, position).Length) == "<KLEENE_STAR>" ||
                     GetToken(compiledExpression, position) == "<KLEENE_STAR>")
                 {
                     clear = true;
                 }
-
-            }
-            else if(CheckToken(compiledExpression, position + 1))
-            {
-                if(GetToken(compiledExpression, position + 1) == "<KLEENE_STAR>")
+                //Check for resolved <OR>/alternation
+                else if (GetToken(compiledExpression, position) == "<OR>")
                 {
                     clear = true;
                 }
             }
+            else if(CheckToken(compiledExpression, position + 1))
+            {
+                //Check for Kleen star
+                if (GetToken(compiledExpression, position + 1) == "<KLEENE_STAR>")
+                {
+                    clear = true;
+                }
+            }
+            //Check for resolved <OR>/alternation
+            
 
             return clear;
         }

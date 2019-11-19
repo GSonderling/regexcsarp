@@ -83,7 +83,7 @@ namespace RegexTester
                 Debug.Assert(pattern.CheckExpression("10HELLO5557jjkWorld") == 0);
                 Debug.Assert(pattern.CheckExpression("abcde fghida46575jklmn     opqrstuv fd558456xyz") == 0);
 
-                //Subexpression detection tests
+                //Subexpression tests
                 pattern = new Pattern("He(llo)*");
                 pattern.CompileExpression();
                 Debug.Assert(pattern.CheckExpression("Hello") == 0);
@@ -91,8 +91,14 @@ namespace RegexTester
                 Debug.Assert(pattern.CheckExpression("Hellollollollollollollo") == 0);
                 Debug.Assert(pattern.CheckExpression("aHello") == 0);
                 Debug.Assert(pattern.CheckExpression("abcdefghaekepafha;e  kfa;eoihf;kldh;dklhfjkahdjkfhkl Hellollollollollollollo") == 0);
-                Debug.Assert(pattern.CheckExpression("He") == 0); 
+                Debug.Assert(pattern.CheckExpression("He") == 0);
 
+                pattern = new Pattern("(ab)|(bc)");
+                pattern.CompileExpression();
+                Debug.Assert(pattern.CheckExpression("ab") == 0);
+                //Debug.Assert(pattern.CheckExpression("bc") == 0);
+                //Debug.Assert(pattern.CheckExpression("abc") == 0);
+                
                 Console.WriteLine("Positive Pattern assertions: OK");
             }
             catch (Exception e)
@@ -112,7 +118,7 @@ namespace RegexTester
                 Debug.Assert(pattern.CheckExpression("Heggo World") == 1);
                 Debug.Assert(pattern.CheckExpression("HELLO WORLD") == 1);
                 Debug.Assert(pattern.CheckExpression("ajaHeo World") == 1);
-                Debug.Assert(pattern.CheckExpression("oll*eH") == 1);//Oh boy
+                Debug.Assert(pattern.CheckExpression("oll*eH") == 1);
                 Debug.Assert(pattern.CheckExpression("abcdhellobcsdWorld") == 1);
                 Debug.Assert(pattern.CheckExpression("10HELLO5557jjkWorld") == 1);
 
@@ -126,6 +132,16 @@ namespace RegexTester
                 Debug.Assert(pattern.CheckExpression("oll*eH") == 1);
                 Debug.Assert(pattern.CheckExpression("abcdhellobcsdWorld") == 1);
                 Debug.Assert(pattern.CheckExpression("10HELLO5557jjkWorld") == 1);
+
+                // Subexpression tests
+                pattern = new Pattern("He(llo)*");
+                pattern.CompileExpression();
+                Debug.Assert(pattern.CheckExpression("helo") == 1);
+                Debug.Assert(pattern.CheckExpression("llollollollohe") == 1);
+                Debug.Assert(pattern.CheckExpression("hello") == 1);
+                Debug.Assert(pattern.CheckExpression("HElllllllo") == 1);
+                Debug.Assert(pattern.CheckExpression("eHlllllo") == 1);
+                Debug.Assert(pattern.CheckExpression("HEloloooooooo") == 1);
 
                 Console.WriteLine("Negative Pattern assertions: OK");
             }
