@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 namespace Regex
 {
     public class Pattern
@@ -19,8 +20,8 @@ namespace Regex
             { '.', "<DOT>"},
             { '^', "<START>"},
             { '$', "<END>"},
-            { '(', "<BRACKSTART>"},
-            { ')', "<BRACKEND>"}
+            { '(', "<LBRACK>"},
+            { ')', "<RBRACK>"}
         };
 
         Dictionary<string, Dictionary<string, string>> transitionTable;
@@ -92,13 +93,13 @@ namespace Regex
             return 0;
         }
 
-        public int CompileExpression()
+        public Dictionary<string, Dictionary<string, string>> CompileAutomaton(string[] precompiledExpression)
         {
-            PreCompilation();
+            Dictionary<string, Dictionary<string, string>> automaton = new Dictionary<string, Dictionary<string, string>>();
+            Dictionary<string, Dictionary<string, string>> subAutomaton = new Dictionary<string, Dictionary<string, string>>();
             //Start state, end state;
-            transitionTable.Add("<S>", new Dictionary<string, string>());
-            transitionTable.Add("<F>", new Dictionary<string, string>());
-            //transitionTable.Add("<1>", new Dictionary<string, string>());
+            automaton.Add("<S>", new Dictionary<string, string>());
+            automaton.Add("<F>", new Dictionary<string, string>());
             string currentState = "<S>";
             string nextState = "<S>";
             string previousState = "<S>";
@@ -107,9 +108,12 @@ namespace Regex
             int stateIterator = 0;
             string previousToken = "";
             //Set compiled flag to true. It's mostly pointless but might not be in the future.
-            foreach (var token in compiledExpression)
+            foreach (var token in precompiledExpression)
             {
-                
+                if(token == "<LBRACK>")
+                {
+                    subAutomaton = CompileAutomaton(GetSubexpression());
+                }
                 if (token.Length == 1 || token == "<DOT>")
                 {
                     if (forward)
@@ -118,13 +122,13 @@ namespace Regex
                         previousState = currentState;
                         currentState = nextState;
                         nextState = "<" + stateIterator + ">";
-                        transitionTable.Add(nextState, new Dictionary<string, string>());
+                        automaton.Add(nextState, new Dictionary<string, string>());
                     }
                     else
                     {
                         forward = true;
                     }
-                    transitionTable[currentState].Add(token, nextState);
+                    automaton[currentState].Add(token, nextState);
                     previousToken = token;
                 }
                 else if (token == "<OR>")
@@ -133,14 +137,57 @@ namespace Regex
                 }
                 else if (token == "<KLEENE_STAR>")
                 {
-                    transitionTable[nextState].Add(previousToken, nextState);
-                    transitionTable[currentState].Add("", nextState);
+                    automaton[nextState].Add(previousToken, nextState);
+                    automaton[currentState].Add("", nextState);
                 }
             }
             currentState = nextState;
             //Add transition to final state
-            transitionTable[currentState].Add("", finalState);
+            automaton[currentState].Add("", finalState);
 
+            return automaton;
+        }
+
+        private string[] GetSubexpression()
+        {
+            string[] subExpressionTemp = new string[compiledExpression.Length];
+            int unbalancedBracks = 0;
+            int tokenPosition = 0;
+            int subexpressionPos = 0;
+
+            while(tokenPosition < compiledExpression.Length )
+            {
+                if(compiledExpression[tokenPosition] == "<LBRACK>")
+                {
+                    unbalancedBracks++;
+                }
+                else if(unbalancedBracks > 0)
+                {
+                    subExpressionTemp[subexpressionPos] = compiledExpression[tokenPosition];
+                    subexpressionPos++;
+                }
+                else if(compiledExpression[tokenPosition] == "<RBRACK>")
+                {
+                    unbalancedBracks--;
+                }
+
+                tokenPosition++;
+            }
+
+            string[] subexpression = new string[subexpressionPos];
+
+            for(int i = 0; i < subexpressionPos; i++)
+            {
+                subexpression[i] = subExpressionTemp[i];
+            }
+
+            return subexpression;
+        }
+
+        public int CompileExpression()
+        {
+            PreCompilation();
+            transitionTable = CompileAutomaton(compiledExpression);
             return 0;
         }
 

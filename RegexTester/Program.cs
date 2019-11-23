@@ -84,14 +84,14 @@ namespace RegexTester
                 Debug.Assert(pattern.CheckExpression("abcde fghida46575jklmn     opqrstuv fd558456xyz") == 0);
 
                 ////Subexpression tests
-                //pattern = new Pattern("He(llo)*");
-                //pattern.CompileExpression();
-                //Debug.Assert(pattern.CheckExpression("Hello") == 0);
-                //Debug.Assert(pattern.CheckExpression("Hellollo") == 0);
-                //Debug.Assert(pattern.CheckExpression("Hellollollollollollollo") == 0);
-                //Debug.Assert(pattern.CheckExpression("aHello") == 0);
-                //Debug.Assert(pattern.CheckExpression("abcdefghaekepafha;e  kfa;eoihf;kldh;dklhfjkahdjkfhkl Hellollollollollollollo") == 0);
-                //Debug.Assert(pattern.CheckExpression("He") == 0);
+                pattern = new Pattern("He(llo)*");
+                pattern.CompileExpression();
+                Debug.Assert(pattern.CheckExpression("Hello") == 0);
+                Debug.Assert(pattern.CheckExpression("Hellollo") == 0);
+                Debug.Assert(pattern.CheckExpression("Hellollollollollollollo") == 0);
+                Debug.Assert(pattern.CheckExpression("aHello") == 0);
+                Debug.Assert(pattern.CheckExpression("abcdefghaekepafha;e  kfa;eoihf;kldh;dklhfjkahdjkfhkl Hellollollollollollollo") == 0);
+                Debug.Assert(pattern.CheckExpression("He") == 0);
 
                 //pattern = new Pattern("(ab)|(bc)");
                 //pattern.CompileExpression();
