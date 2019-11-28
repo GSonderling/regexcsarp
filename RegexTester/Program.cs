@@ -93,11 +93,26 @@ namespace RegexTester
                 Debug.Assert(pattern.CheckExpression("abcdefghaekepafha;e  kfa;eoihf;kldh;dklhfjkahdjkfhkl Hellollollollollollollo") == 0);
                 Debug.Assert(pattern.CheckExpression("He") == 0);
 
-                //pattern = new Pattern("(ab)|(bc)");
-                //pattern.CompileExpression();
-                //Debug.Assert(pattern.CheckExpression("ab") == 0);
-                ////Debug.Assert(pattern.CheckExpression("bc") == 0);
-                ////Debug.Assert(pattern.CheckExpression("abc") == 0);
+                pattern = new Pattern("He(ll)*o");
+                pattern.CompileExpression();
+                Debug.Assert(pattern.CheckExpression("Hello") == 0);
+                Debug.Assert(pattern.CheckExpression("Hellllo") == 0);
+                Debug.Assert(pattern.CheckExpression("Hellollollollollollollo") == 0);
+                Debug.Assert(pattern.CheckExpression("aHello") == 0);
+                Debug.Assert(pattern.CheckExpression("abcdefghaekepafha;e  kfa;eoihf;kldh;dklhfjkahdjkfhkl Hellollollollollollollo") == 0);
+                Debug.Assert(pattern.CheckExpression("Heo") == 0);
+
+                pattern = new Pattern("(ab)|(bc)");
+                pattern.CompileExpression();
+                Debug.Assert(pattern.CheckExpression("ab") == 0);
+                Debug.Assert(pattern.CheckExpression("bc") == 0);
+                Debug.Assert(pattern.CheckExpression("abc") == 0);
+
+                pattern = new Pattern("xyz(ab)|(bc)");
+                pattern.CompileExpression();
+                Debug.Assert(pattern.CheckExpression("xyzab") == 0);
+                Debug.Assert(pattern.CheckExpression("xyzbc") == 0);
+                Debug.Assert(pattern.CheckExpression("xyzabc") == 0);
 
                 Console.WriteLine("Positive Pattern assertions: OK");
             }
@@ -153,14 +168,20 @@ namespace RegexTester
                 Debug.Assert(pattern.CheckExpression("abc") == 1);
 
                 // Subexpression tests
-                //pattern = new Pattern("He(llo)*");
-                //pattern.CompileExpression();
-                //Debug.Assert(pattern.CheckExpression("helo") == 1);
-                //Debug.Assert(pattern.CheckExpression("llollollollohe") == 1);
-                //Debug.Assert(pattern.CheckExpression("hello") == 1);
-                //Debug.Assert(pattern.CheckExpression("HElllllllo") == 1);
-                //Debug.Assert(pattern.CheckExpression("eHlllllo") == 1);
-                //Debug.Assert(pattern.CheckExpression("HEloloooooooo") == 1);
+                pattern = new Pattern("He(llo)*");
+                pattern.CompileExpression();
+                Debug.Assert(pattern.CheckExpression("helo") == 1);
+                Debug.Assert(pattern.CheckExpression("llollollollohe") == 1);
+                Debug.Assert(pattern.CheckExpression("hello") == 1);
+                Debug.Assert(pattern.CheckExpression("HElllllllo") == 1);
+                Debug.Assert(pattern.CheckExpression("eHlllllo") == 1);
+                Debug.Assert(pattern.CheckExpression("HEloloooooooo") == 1);
+
+                pattern = new Pattern("xyz(ab)|(bc)");
+                pattern.CompileExpression();
+                Debug.Assert(pattern.CheckExpression("ab") == 1);
+                Debug.Assert(pattern.CheckExpression("bc") == 1);
+                Debug.Assert(pattern.CheckExpression("abc") == 1);
 
                 Console.WriteLine("Negative Pattern assertions: OK");
             }

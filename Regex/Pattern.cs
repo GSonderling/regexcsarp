@@ -93,6 +93,21 @@ namespace Regex
             return 0;
         }
 
+        Dictionary<string, Dictionary<string, string>> RenameStates(Dictionary<string, Dictionary<string, string>> automaton, int indexAppend)
+        {
+            Dictionary<string, Dictionary<string, string>> newAutomaton = new Dictionary<string, Dictionary<string, string>>();
+            foreach (var state in automaton)
+            {
+                newAutomaton.Add("<" + state.Key + "-" + indexAppend + ">", new Dictionary<string, string>());
+                foreach(var transition in state.Value)
+                {
+                    newAutomaton["<" + state.Key + "-" + indexAppend + ">"].Add(transition.Key,
+                        "<" + transition.Value + "-" + indexAppend + ">");
+                }
+            }
+            return newAutomaton;
+        }
+
         public Dictionary<string, Dictionary<string, string>> CompileAutomaton(string[] precompiledExpression)
         {
             Dictionary<string, Dictionary<string, string>> automaton = new Dictionary<string, Dictionary<string, string>>();
@@ -104,17 +119,56 @@ namespace Regex
             string nextState = "<S>";
             string previousState = "<S>";
             string finalState = "<F>";
+            string branchState = "";
+            string hangingState = "";
             bool forward = true;
             int stateIterator = 0;
             string previousToken = "";
+            int subAutomatonIterator = 0;
+            int tokenPosition = 0;
+            bool openBracket = false;
             //Set compiled flag to true. It's mostly pointless but might not be in the future.
             foreach (var token in precompiledExpression)
             {
                 if(token == "<LBRACK>")
                 {
-                    subAutomaton = CompileAutomaton(GetSubexpression());
+                    openBracket = true;
+                    subAutomaton = CompileAutomaton(GetSubexpression(tokenPosition));
+                    //connect the automatons
+                    subAutomatonIterator++;
+                    subAutomaton = RenameStates(subAutomaton, subAutomatonIterator);
+
+                    foreach (var state in subAutomaton)
+                    {
+                        automaton.Add(state.Key, state.Value);
+                        if (state.Key == "<<S>-" + subAutomatonIterator + ">")
+                        {
+                            if (forward)
+                            {
+                                automaton[nextState].Add("", state.Key);
+                            }
+                            else
+                            {                                
+                                automaton[branchState].Add("", state.Key);
+                            }
+                        }
+                    }
+                    previousState = currentState;
+                    currentState = "<<S>-" + subAutomatonIterator + ">";
+                    nextState = "<<F>-" + subAutomatonIterator + ">";
+                    previousToken = "";
+                    if (!forward)
+                    {
+                        automaton[hangingState].Add("", nextState);
+                    }
                 }
-                if (token.Length == 1 || token == "<DOT>")
+                if (token == "<RBRACK>")
+                {
+                    openBracket = false;
+                    tokenPosition++;
+                    continue;
+                }
+                if ((token.Length == 1 || token == "<DOT>") && !openBracket)
                 {
                     if (forward)
                     {
@@ -133,13 +187,22 @@ namespace Regex
                 }
                 else if (token == "<OR>")
                 {
+                    hangingState = nextState;
+                    branchState = currentState;
                     forward = false;
                 }
                 else if (token == "<KLEENE_STAR>")
                 {
-                    automaton[nextState].Add(previousToken, nextState);
-                    automaton[currentState].Add("", nextState);
+                    stateIterator++;
+                    previousState = currentState;
+                    currentState = nextState;
+                    nextState = "<" + stateIterator + ">";
+                    automaton.Add(nextState, new Dictionary<string, string>());
+
+                    automaton[previousState].Add("", nextState);
+                    automaton[currentState].Add("", previousState);
                 }
+                tokenPosition++;
             }
             currentState = nextState;
             //Add transition to final state
@@ -148,28 +211,29 @@ namespace Regex
             return automaton;
         }
 
-        private string[] GetSubexpression()
+        private string[] GetSubexpression(int tokenPosition = 0)
         {
             string[] subExpressionTemp = new string[compiledExpression.Length];
             int unbalancedBracks = 0;
-            int tokenPosition = 0;
             int subexpressionPos = 0;
 
             while(tokenPosition < compiledExpression.Length )
             {
+                
                 if(compiledExpression[tokenPosition] == "<LBRACK>")
                 {
                     unbalancedBracks++;
+                }
+                else if (compiledExpression[tokenPosition] == "<RBRACK>")
+                {
+                    break;
                 }
                 else if(unbalancedBracks > 0)
                 {
                     subExpressionTemp[subexpressionPos] = compiledExpression[tokenPosition];
                     subexpressionPos++;
                 }
-                else if(compiledExpression[tokenPosition] == "<RBRACK>")
-                {
-                    unbalancedBracks--;
-                }
+                
 
                 tokenPosition++;
             }
