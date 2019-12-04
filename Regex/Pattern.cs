@@ -1,15 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 namespace Regex
 {
     public class Pattern
     {
-        int position;
         string uncompiledExpression;
         string[] compiledExpression;
         string[] alphabet;
-
-        int tokenPosition;
 
         Dictionary<char, string> tokenChars = new Dictionary<char, string> {
             /*
@@ -25,16 +21,11 @@ namespace Regex
         };
 
         Dictionary<string, Dictionary<string, string>> transitionTable;
-
-        Dictionary<string, Pattern> subExpressions;
+        
         public Pattern(string patternString)
         {
-            position = 0;
-            tokenPosition = 0;
             uncompiledExpression = patternString;
-            subExpressions = new Dictionary<string, Pattern>();
-            transitionTable = new Dictionary<string, Dictionary<string, string>>();
-            
+            transitionTable = new Dictionary<string, Dictionary<string, string>>();            
         }
         
         int PreCompilation()
@@ -96,6 +87,7 @@ namespace Regex
         Dictionary<string, Dictionary<string, string>> RenameStates(Dictionary<string, Dictionary<string, string>> automaton, int indexAppend)
         {
             Dictionary<string, Dictionary<string, string>> newAutomaton = new Dictionary<string, Dictionary<string, string>>();
+
             foreach (var state in automaton)
             {
                 newAutomaton.Add("<" + state.Key + "-" + indexAppend + ">", new Dictionary<string, string>());
@@ -105,13 +97,15 @@ namespace Regex
                         "<" + transition.Value + "-" + indexAppend + ">");
                 }
             }
+
             return newAutomaton;
         }
 
-        public Dictionary<string, Dictionary<string, string>> CompileAutomaton(string[] precompiledExpression)
+        private Dictionary<string, Dictionary<string, string>> CompileAutomaton(string[] precompiledExpression)
         {
             Dictionary<string, Dictionary<string, string>> automaton = new Dictionary<string, Dictionary<string, string>>();
             Dictionary<string, Dictionary<string, string>> subAutomaton = new Dictionary<string, Dictionary<string, string>>();
+
             //Start state, end state;
             automaton.Add("<S>", new Dictionary<string, string>());
             automaton.Add("<F>", new Dictionary<string, string>());
@@ -127,9 +121,10 @@ namespace Regex
             int subAutomatonIterator = 0;
             int tokenPosition = 0;
             bool openBracket = false;
+
             //Set compiled flag to true. It's mostly pointless but might not be in the future.
             foreach (var token in precompiledExpression)
-            {
+            {               
                 if(token == "<LBRACK>")
                 {
                     openBracket = true;
@@ -169,7 +164,7 @@ namespace Regex
                     tokenPosition++;
                     continue;
                 }
-                if ((token.Length == 1 || token == "<DOT>") && !openBracket)
+                if ((token.Length == 1 || token == "<DOT>" || token == "<START>" || token == "<END>") && !openBracket)
                 {
                     if (forward)
                     {
@@ -262,40 +257,59 @@ namespace Regex
             //We check every character in input string.
             int inputIndex = 0;
             string currentState = "<S>";
+
+            inputString = "<START>" + inputString + "<END>";
+
             while(inputIndex < inputString.Length && currentState != "<F>")
             {
-                //Check if we have valid subexpression to parse
-                if (transitionTable[currentState].ContainsKey((string) inputString[inputIndex].ToString()))
+                //First check for anchors
+                if (transitionTable[currentState].ContainsKey("<START>") && inputIndex == 0)
                 {
-                    currentState = transitionTable[currentState][(string)inputString[inputIndex].ToString()];
+                    currentState = transitionTable[currentState]["<START>"];
+                    inputIndex += "<START>".Length - 1;
                 }
-                else if (transitionTable[currentState].ContainsKey("<DOT>"))
+                else if (inputIndex == 0)
                 {
-                    currentState = transitionTable[currentState]["<DOT>"];
+                    inputIndex += "<START>".Length - 1;
                 }
-                else if (transitionTable[currentState].ContainsKey(""))
+                else if (transitionTable[currentState].ContainsKey("<END>") && inputIndex == (inputString.Length-"<END>".Length))
                 {
-                    currentState = transitionTable[currentState][""];
-                    inputIndex--;
+                    currentState = transitionTable[currentState]["<END>"];
+                    inputIndex += "<END>".Length - 1;
                 }
+                //Now normal characters/tokens
                 else
                 {
-                    currentState = "<S>";
-                }
+                    //Check if we have valid subexpression to parse
+                    if (transitionTable[currentState].ContainsKey((string)inputString[inputIndex].ToString()))
+                    {
+                        currentState = transitionTable[currentState][(string)inputString[inputIndex].ToString()];
+                    }
+                    else if (transitionTable[currentState].ContainsKey("<DOT>"))
+                    {
+                        currentState = transitionTable[currentState]["<DOT>"];
+                    }
+                    else if (transitionTable[currentState].ContainsKey(""))
+                    {
+                        currentState = transitionTable[currentState][""];
+                        inputIndex--;
+                    }
+                    else
+                    {
+                        currentState = "<S>";
+                    }
+                } 
 
                 inputIndex++;
             }
             while (transitionTable[currentState].ContainsKey(""))
             {
                 currentState = transitionTable[currentState][""];
-
             }
             if (currentState == "<F>")
             {
                 matchFound = 0;
             }        
-            position = 0;
-            tokenPosition = 0;            
 
             return matchFound;
         }
