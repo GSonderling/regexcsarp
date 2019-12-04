@@ -160,6 +160,7 @@ namespace Regex
                     if (!forward)
                     {
                         automaton[hangingState].Add("", nextState);
+                        forward = true;
                     }
                 }
                 if (token == "<RBRACK>")

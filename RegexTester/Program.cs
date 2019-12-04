@@ -183,6 +183,18 @@ namespace RegexTester
                 Debug.Assert(pattern.CheckExpression("bc") == 1);
                 Debug.Assert(pattern.CheckExpression("abc") == 1);
 
+                pattern = new Pattern("(abd)|(zbc)");
+                pattern.CompileExpression();
+                Debug.Assert(pattern.CheckExpression("ab") == 1);
+                Debug.Assert(pattern.CheckExpression("bc") == 1);
+                Debug.Assert(pattern.CheckExpression("abc") == 1);
+
+                pattern = new Pattern("xyz(ab)|(bc)d");
+                pattern.CompileExpression();
+                Debug.Assert(pattern.CheckExpression("xyzab") == 1);
+                Debug.Assert(pattern.CheckExpression("xyzbc") == 1);
+                Debug.Assert(pattern.CheckExpression("xyzabc") == 1);
+
                 Console.WriteLine("Negative Pattern assertions: OK");
             }
             catch (Exception e)
