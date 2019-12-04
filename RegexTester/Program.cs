@@ -22,7 +22,7 @@ namespace RegexTester
                 Debug.Assert(pattern.CheckExpression("abcdHellobcsdWorld") == 0);
                 Debug.Assert(pattern.CheckExpression("10Hello5557jjkWorld") == 0);
 
-                //Ignore char
+                ////Ignore char
                 pattern = new Pattern("Hellg*o");
                 pattern.CompileExpression();
                 Debug.Assert(pattern.CheckExpression("Hello") == 0);
@@ -64,11 +64,11 @@ namespace RegexTester
                 Debug.Assert(pattern.CheckExpression("sxd") == 0);
                 Debug.Assert(pattern.CheckExpression("sxc") == 0);
 
-                //GET ALL TEST. Dot and star eww
-                //Here start problems. The pattern is matched, but procedure doesn't reach end of string.
+                ////GET ALL TEST. Dot and star eww
+                ////Here start problems.
                 pattern = new Pattern(".*");
                 pattern.CompileExpression();
-                Debug.Assert(pattern.CheckExpression("Hello") == 0); 
+                Debug.Assert(pattern.CheckExpression("Hello") == 0);
                 Debug.Assert(pattern.CheckExpression("Hello World") == 0);
                 Debug.Assert(pattern.CheckExpression("ajaHello World") == 0);
                 Debug.Assert(pattern.CheckExpression("akalHello") == 0);
@@ -83,7 +83,7 @@ namespace RegexTester
                 Debug.Assert(pattern.CheckExpression("10HELLO5557jjkWorld") == 0);
                 Debug.Assert(pattern.CheckExpression("abcde fghida46575jklmn     opqrstuv fd558456xyz") == 0);
 
-                //Subexpression tests
+                ////Subexpression tests
                 pattern = new Pattern("He(llo)*");
                 pattern.CompileExpression();
                 Debug.Assert(pattern.CheckExpression("Hello") == 0);
@@ -93,12 +93,27 @@ namespace RegexTester
                 Debug.Assert(pattern.CheckExpression("abcdefghaekepafha;e  kfa;eoihf;kldh;dklhfjkahdjkfhkl Hellollollollollollollo") == 0);
                 Debug.Assert(pattern.CheckExpression("He") == 0);
 
+                pattern = new Pattern("He(ll)*o");
+                pattern.CompileExpression();
+                Debug.Assert(pattern.CheckExpression("Hello") == 0);
+                Debug.Assert(pattern.CheckExpression("Hellllo") == 0);
+                Debug.Assert(pattern.CheckExpression("Hellollollollollollollo") == 0);
+                Debug.Assert(pattern.CheckExpression("aHello") == 0);
+                Debug.Assert(pattern.CheckExpression("abcdefghaekepafha;e  kfa;eoihf;kldh;dklhfjkahdjkfhkl Hellollollollollollollo") == 0);
+                Debug.Assert(pattern.CheckExpression("Heo") == 0);
+
                 pattern = new Pattern("(ab)|(bc)");
                 pattern.CompileExpression();
                 Debug.Assert(pattern.CheckExpression("ab") == 0);
-                //Debug.Assert(pattern.CheckExpression("bc") == 0);
-                //Debug.Assert(pattern.CheckExpression("abc") == 0);
-                
+                Debug.Assert(pattern.CheckExpression("bc") == 0);
+                Debug.Assert(pattern.CheckExpression("abc") == 0);
+
+                pattern = new Pattern("xyz(ab)|(bc)");
+                pattern.CompileExpression();
+                Debug.Assert(pattern.CheckExpression("xyzab") == 0);
+                Debug.Assert(pattern.CheckExpression("xyzbc") == 0);
+                Debug.Assert(pattern.CheckExpression("xyzabc") == 0);
+
                 Console.WriteLine("Positive Pattern assertions: OK");
             }
             catch (Exception e)
@@ -133,6 +148,25 @@ namespace RegexTester
                 Debug.Assert(pattern.CheckExpression("abcdhellobcsdWorld") == 1);
                 Debug.Assert(pattern.CheckExpression("10HELLO5557jjkWorld") == 1);
 
+                pattern = new Pattern("a.c");
+                pattern.CompileExpression();
+                Debug.Assert(pattern.CheckExpression("ab") == 1);
+                Debug.Assert(pattern.CheckExpression("abC") == 1);
+                Debug.Assert(pattern.CheckExpression("bc") == 1);
+                Debug.Assert(pattern.CheckExpression("BC") == 1);
+                Debug.Assert(pattern.CheckExpression("abjkhdfklakehifajeuiouaehfhnaehlaem,hfijahfuijukgnhe") == 1);
+
+                //Alternation tests
+                pattern = new Pattern("ab|cd");
+                pattern.CompileExpression();
+                Debug.Assert(pattern.CheckExpression("Heggo") == 1);
+                Debug.Assert(pattern.CheckExpression("abce") == 1);
+                Debug.Assert(pattern.CheckExpression("ace") == 1);
+                Debug.Assert(pattern.CheckExpression("ac") == 1);
+                Debug.Assert(pattern.CheckExpression("ab") == 1);
+                Debug.Assert(pattern.CheckExpression("abccc") == 1);
+                Debug.Assert(pattern.CheckExpression("abc") == 1);
+
                 // Subexpression tests
                 pattern = new Pattern("He(llo)*");
                 pattern.CompileExpression();
@@ -143,6 +177,12 @@ namespace RegexTester
                 Debug.Assert(pattern.CheckExpression("eHlllllo") == 1);
                 Debug.Assert(pattern.CheckExpression("HEloloooooooo") == 1);
 
+                pattern = new Pattern("xyz(ab)|(bc)");
+                pattern.CompileExpression();
+                Debug.Assert(pattern.CheckExpression("ab") == 1);
+                Debug.Assert(pattern.CheckExpression("bc") == 1);
+                Debug.Assert(pattern.CheckExpression("abc") == 1);
+
                 Console.WriteLine("Negative Pattern assertions: OK");
             }
             catch (Exception e)
@@ -150,47 +190,7 @@ namespace RegexTester
                 Console.WriteLine("Negative Pattern assertions: ERROR");
                 Console.WriteLine(e);
             }
-
-            /*
-             Positive assertions PatternMatcher
-             */
-            try
-            {
-                Debug.Assert(PatternMatcher.Match_pattern("Hello World", "ello") == 0);
-                Debug.Assert(PatternMatcher.Match_pattern("Hello World", "e") == 0);
-                Debug.Assert(PatternMatcher.Match_pattern("Hello World", "Wor") == 0);
-                Debug.Assert(PatternMatcher.Match_pattern("Hello World", "ld") == 0);
-                Debug.Assert(PatternMatcher.Match_pattern("Hello World", "Hello") == 0);
-                Debug.Assert(PatternMatcher.Match_pattern("Hello World", "Hello World") == 0);
-
-                Console.WriteLine("Positive PatternMatcher assertions: OK");
-            }
-            catch (Exception e)
-            {
-
-                Console.WriteLine("Positive PatternMatcher assertions: ERROR");
-                Console.WriteLine(e);
-            }
-
-            /*
-             Negative assertions PatternMatcher
-             */
-            try
-            {
-                Debug.Assert(PatternMatcher.Match_pattern("Hello World", "eelo") == 1);
-                Debug.Assert(PatternMatcher.Match_pattern("Hello World", "X") == 1);
-                Debug.Assert(PatternMatcher.Match_pattern("Hello World", "x") == 1);
-                Debug.Assert(PatternMatcher.Match_pattern("Hello World", "Heello") == 1);
-                Debug.Assert(PatternMatcher.Match_pattern("Hello World", "Hello Worldd") == 1);
-
-                Console.WriteLine("Negative PatternMatcher assertions: OK");
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Negative PatternMatcher assertions: ERROR");
-                Console.WriteLine(e);
-            }
-
+            
             Console.WriteLine("...");
             Console.ReadKey();
         }
