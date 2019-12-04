@@ -57,6 +57,7 @@ namespace RegexTester
                 pattern.CompileExpression();
                 Debug.Assert(pattern.CheckExpression("abc") == 0);
                 Debug.Assert(pattern.CheckExpression("abd") == 0);
+
                 pattern = new Pattern("..c|d");
                 pattern.CompileExpression();
                 Debug.Assert(pattern.CheckExpression("abc") == 0);
@@ -114,6 +115,30 @@ namespace RegexTester
                 Debug.Assert(pattern.CheckExpression("xyzbc") == 0);
                 Debug.Assert(pattern.CheckExpression("xyzabc") == 0);
 
+                //Caret
+                pattern = new Pattern("^abc");
+                pattern.CompileExpression();
+                Debug.Assert(pattern.CheckExpression("abc") == 0);
+                Debug.Assert(pattern.CheckExpression("abcd") == 0);
+                Debug.Assert(pattern.CheckExpression("abcDADK") == 0);
+                Debug.Assert(pattern.CheckExpression("abc754676") == 0);
+
+                //bit more complicated
+                pattern = new Pattern("^abc*");
+                pattern.CompileExpression();
+                Debug.Assert(pattern.CheckExpression("abc") == 0);
+                Debug.Assert(pattern.CheckExpression("abcc") == 0);
+                Debug.Assert(pattern.CheckExpression("ab") == 0);
+                Debug.Assert(pattern.CheckExpression("abfda461e;adfkkjhe5656") == 0);
+
+                //Dolar sign
+                pattern = new Pattern("abc$");
+                pattern.CompileExpression();
+                Debug.Assert(pattern.CheckExpression("abc") == 0);
+                Debug.Assert(pattern.CheckExpression("afadkfabc") == 0);
+                Debug.Assert(pattern.CheckExpression("abcabcabcabcabcbbabc") == 0);
+                Debug.Assert(pattern.CheckExpression("abc") == 0);
+                
                 Console.WriteLine("Positive Pattern assertions: OK");
             }
             catch (Exception e)
@@ -194,6 +219,30 @@ namespace RegexTester
                 Debug.Assert(pattern.CheckExpression("xyzab") == 1);
                 Debug.Assert(pattern.CheckExpression("xyzbc") == 1);
                 Debug.Assert(pattern.CheckExpression("xyzabc") == 1);
+
+                //Caret
+                pattern = new Pattern("^bc");
+                pattern.CompileExpression();
+                Debug.Assert(pattern.CheckExpression("abc") == 1);
+                Debug.Assert(pattern.CheckExpression("abcd") == 1);
+                Debug.Assert(pattern.CheckExpression("abcDADK") == 1);
+                Debug.Assert(pattern.CheckExpression("abc754676") == 1);
+
+                //bit more complicated
+                pattern = new Pattern("^abc*d");
+                pattern.CompileExpression();
+                Debug.Assert(pattern.CheckExpression("abc") == 1);
+                Debug.Assert(pattern.CheckExpression("abcc") == 1);
+                Debug.Assert(pattern.CheckExpression("ab") == 1);
+                Debug.Assert(pattern.CheckExpression("abfda461e;adfkkjhe5656") == 1);
+
+                //Dolar sign
+                pattern = new Pattern("abc$");
+                pattern.CompileExpression();
+                Debug.Assert(pattern.CheckExpression("abcd") == 1);
+                Debug.Assert(pattern.CheckExpression("afadkfabca") == 1);
+                Debug.Assert(pattern.CheckExpression("abcabcabcabcabcbbabcccz") == 1);
+                Debug.Assert(pattern.CheckExpression("abc3566abc6465465ccbbaaa") == 1);
 
                 Console.WriteLine("Negative Pattern assertions: OK");
             }
