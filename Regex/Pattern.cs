@@ -3,11 +3,11 @@ namespace Regex
 {
     public class Pattern
     {
-        string uncompiledExpression;
-        string[] compiledExpression;
-        string[] alphabet;
+        readonly string uncompiledExpression;
+        private string[] compiledExpression;
+        private string[] alphabet;
 
-        Dictionary<char, string> tokenChars = new Dictionary<char, string> {
+        readonly Dictionary<char, string> tokenChars = new Dictionary<char, string> {
             /*
              Dictionary of known tokens.
              */
@@ -59,14 +59,11 @@ namespace Regex
                 else
                 {
                     //if there is no valid token, we just use original char.
-                    compiledExpressionTemp[index] = (string) uncompiledExpression[index].ToString();
-                    alphabetTemp[index] = (string)uncompiledExpression[index].ToString();
+                    compiledExpressionTemp[index] = uncompiledExpression[index].ToString();
+                    alphabetTemp[index] = uncompiledExpression[index].ToString();
                     alphabetIndex++;
                 }
             }
-
-            //Count compiled len
-            int compiledLen = 0;
 
             compiledExpression = new string[tokenIndex + alphabetIndex];
             alphabet = new string[alphabetIndex];
@@ -122,14 +119,16 @@ namespace Regex
             int tokenPosition = 0;
             bool openBracket = false;
 
-            //Set compiled flag to true. It's mostly pointless but might not be in the future.
             foreach (var token in precompiledExpression)
-            {               
+            {   
+                //Check for all possible tokens
+                //Subexpressions have priority and are considered separate automatons. 
                 if(token == "<LBRACK>")
                 {
                     openBracket = true;
+                    //Complie the newly found subexpression as an automaton. 
                     subAutomaton = CompileAutomaton(GetSubexpression(tokenPosition));
-                    //connect the automatons
+                    //connect the automatons with empty transitions. 
                     subAutomatonIterator++;
                     subAutomaton = RenameStates(subAutomaton, subAutomatonIterator);
 
@@ -158,52 +157,59 @@ namespace Regex
                         forward = true;
                     }
                 }
-                if (token == "<RBRACK>")
+                //Look for closing bracket. Until we find it keep iterating
+                else if (token == "<RBRACK>" && openBracket)
                 {
                     openBracket = false;
-                    tokenPosition++;
-                    continue;
                 }
-                if ((token.Length == 1 || token == "<DOT>" || token == "<START>" || token == "<END>") && !openBracket)
+                //This should never happend. If it does the compilation fails and exception is raised.
+                else if (token == "<RBRACK>" && !openBracket)
                 {
-                    if (forward)
+                    throw new System.Exception("Compilation failed, check the expression.");
+                }
+                else if (!openBracket)
+                {
+                    if (token.Length == 1 || token == "<DOT>" || token == "<START>" || token == "<END>")
+                    {
+                        if (forward)
+                        {
+                            stateIterator++;
+                            previousState = currentState;
+                            currentState = nextState;
+                            nextState = "<" + stateIterator + ">";
+                            automaton.Add(nextState, new Dictionary<string, string>());
+                        }
+                        else
+                        {
+                            forward = true;
+                        }
+                        automaton[currentState].Add(token, nextState);
+                        previousToken = token;
+                    }
+                    else if (token == "<OR>")
+                    {
+                        hangingState = nextState;
+                        branchState = currentState;
+                        forward = false;
+                    }
+                    else if (token == "<KLEENE_STAR>")
                     {
                         stateIterator++;
                         previousState = currentState;
                         currentState = nextState;
                         nextState = "<" + stateIterator + ">";
                         automaton.Add(nextState, new Dictionary<string, string>());
-                    }
-                    else
-                    {
-                        forward = true;
-                    }
-                    automaton[currentState].Add(token, nextState);
-                    previousToken = token;
-                }
-                else if (token == "<OR>")
-                {
-                    hangingState = nextState;
-                    branchState = currentState;
-                    forward = false;
-                }
-                else if (token == "<KLEENE_STAR>")
-                {
-                    stateIterator++;
-                    previousState = currentState;
-                    currentState = nextState;
-                    nextState = "<" + stateIterator + ">";
-                    automaton.Add(nextState, new Dictionary<string, string>());
 
-                    automaton[previousState].Add("", nextState);
-                    automaton[currentState].Add("", previousState);
+                        automaton[previousState].Add("", nextState);
+                        automaton[currentState].Add("", previousState);
+                    }
                 }
+                
                 tokenPosition++;
             }
             currentState = nextState;
             //Add transition to final state
             automaton[currentState].Add("", finalState);
-
             return automaton;
         }
 
@@ -215,21 +221,22 @@ namespace Regex
 
             while(tokenPosition < compiledExpression.Length )
             {
-                
+                //We found start of subexpression
                 if(compiledExpression[tokenPosition] == "<LBRACK>")
                 {
                     unbalancedBracks++;
                 }
+                //...end of subexpression reached. We do not expect nested subexpressions.
                 else if (compiledExpression[tokenPosition] == "<RBRACK>")
                 {
+                    unbalancedBracks--;
                     break;
                 }
                 else if(unbalancedBracks > 0)
                 {
                     subExpressionTemp[subexpressionPos] = compiledExpression[tokenPosition];
                     subexpressionPos++;
-                }
-                
+                }                
 
                 tokenPosition++;
             }
@@ -241,12 +248,20 @@ namespace Regex
                 subexpression[i] = subExpressionTemp[i];
             }
 
+            // if there are any unbalanced brackets left, something went obviously wrong.
+            if (unbalancedBracks !=0)
+            {
+                throw new System.Exception("Compilation failed, check the expression.");
+            }
+
             return subexpression;
         }
 
         public int CompileExpression()
         {
+            //PreCompilation substitutes specific characters for tokens
             PreCompilation();
+            //transition table is created from precompiled expression
             transitionTable = CompileAutomaton(compiledExpression);
             return 0;
         }
@@ -254,12 +269,13 @@ namespace Regex
         public int CheckExpression(string inputString)
         {
             int matchFound = 1;
-            //We check every character in input string.
+            //We check every character in the input string.
             int inputIndex = 0;
             string currentState = "<S>";
-
+            
+            //Anchors are added to the input string. We assume one line of standard input.
             inputString = "<START>" + inputString + "<END>";
-
+            //We iterate as long as we have some input, or until we reach the <F> state.
             while(inputIndex < inputString.Length && currentState != "<F>")
             {
                 //First check for anchors
@@ -268,6 +284,7 @@ namespace Regex
                     currentState = transitionTable[currentState]["<START>"];
                     inputIndex += "<START>".Length - 1;
                 }
+                //If we don't have <START> in transition table we just skip it and move to first real char.
                 else if (inputIndex == 0)
                 {
                     inputIndex += "<START>".Length - 1;
@@ -280,15 +297,17 @@ namespace Regex
                 //Now normal characters/tokens
                 else
                 {
-                    //Check if we have valid subexpression to parse
-                    if (transitionTable[currentState].ContainsKey((string)inputString[inputIndex].ToString()))
+                    //Check if the input character is in transition table
+                    if (transitionTable[currentState].ContainsKey(inputString[inputIndex].ToString()))
                     {
-                        currentState = transitionTable[currentState][(string)inputString[inputIndex].ToString()];
+                        currentState = transitionTable[currentState][inputString[inputIndex].ToString()];
                     }
+                    //otherwise try <DOT>...
                     else if (transitionTable[currentState].ContainsKey("<DOT>"))
                     {
                         currentState = transitionTable[currentState]["<DOT>"];
                     }
+                    //check for empty transitions, if we find any, decrease inputIndex by one, so that we can try again.
                     else if (transitionTable[currentState].ContainsKey(""))
                     {
                         currentState = transitionTable[currentState][""];
@@ -296,21 +315,25 @@ namespace Regex
                     }
                     else
                     {
+                        //If we found no transition return back to start state.
+                        //This is essentially way to save entries in transition table.
                         currentState = "<S>";
                     }
                 } 
-
+                //Always increase inputIndex by one. If we need to read the char again we already subtracted.
                 inputIndex++;
             }
+            //Follow empty transitions as far as possible
             while (transitionTable[currentState].ContainsKey(""))
             {
                 currentState = transitionTable[currentState][""];
             }
+            //If we reached end state, marked <F>, we can say that match was found.
             if (currentState == "<F>")
             {
                 matchFound = 0;
             }        
-
+            //Return the result.
             return matchFound;
         }
     }
